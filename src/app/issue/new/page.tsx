@@ -1,0 +1,345 @@
+"use client";
+
+import { useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  ArrowRight,
+  CheckCircle2,
+  FileText,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+  Users,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+
+const categories = [
+  "governance",
+  "infrastructure",
+  "education",
+  "healthcare",
+  "environment",
+  "transport",
+  "water",
+  "sanitation",
+  "safety",
+  "corruption",
+  "utilities",
+  "police",
+  "other",
+] as const;
+
+const evidenceLevels = ["low", "medium", "high"] as const;
+const languages = ["en", "hi"] as const;
+
+const issueSchema = z.object({
+  title: z.string().min(12, "Add a specific title."),
+  description: z.string().min(80, "Add enough context for a moderator to understand the issue."),
+  category: z.enum(categories),
+  state: z.string().min(2, "State is required."),
+  district: z.string().min(2, "District is required."),
+  landmark: z.string().min(3, "Add a nearby landmark or locality."),
+  evidenceLevel: z.enum(evidenceLevels),
+  language: z.enum(languages),
+  consent: z.boolean().refine((value) => value, {
+    message: "Please confirm the information is accurate to the best of your knowledge.",
+  }),
+});
+
+type IssueFormValues = z.infer<typeof issueSchema>;
+
+const defaultValues: IssueFormValues = {
+  title: "",
+  description: "",
+  category: "other",
+  state: "",
+  district: "",
+  landmark: "",
+  evidenceLevel: "medium",
+  language: "en",
+  consent: true,
+};
+
+const checklist = [
+  "Keep the complaint factual, local, and specific.",
+  "Attach original photos, videos, PDFs, or links where possible.",
+  "Avoid naming private individuals unless the evidence is public and relevant.",
+  "Use the platform for lawful civic escalation, not rumor spread.",
+];
+
+const nextSteps = [
+  {
+    title: "Moderation pass",
+    text: "Toxicity, spam, and duplicate checks can flag the submission before it reaches the public feed.",
+  },
+  {
+    title: "Human review",
+    text: "A moderator verifies the context, evidence quality, and any policy risks before publication.",
+  },
+  {
+    title: "Public issue trail",
+    text: "Once approved, supporters can track status, add lawful context, and follow escalation steps.",
+  },
+];
+
+export default function NewIssuePage() {
+  const [submitted, setSubmitted] = useState(false);
+
+  const form = useForm<IssueFormValues>({
+    resolver: zodResolver(issueSchema),
+    defaultValues,
+    mode: "onTouched",
+  });
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-[#f4f1ea] text-slate-950 dark:bg-slate-950 dark:text-slate-50">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-0 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-amber-200/40 blur-3xl dark:bg-amber-900/20" />
+        <div className="absolute right-0 top-24 h-96 w-96 translate-x-1/3 rounded-full bg-sky-200/30 blur-3xl dark:bg-sky-900/20" />
+      </div>
+
+      <main className="relative mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-14">
+        <section className="space-y-6">
+          <div className="space-y-4">
+            <Badge variant="outline" className="border-slate-900/10 bg-white/80 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+              <Sparkles className="mr-1 h-3.5 w-3.5" />
+              New issue
+            </Badge>
+            <div>
+              <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+                Raise a verified public issue.
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300">
+                Describe what happened in plain language, add any safe supporting details, and submit a case that can be reviewed for public action.
+              </p>
+            </div>
+          </div>
+
+          {submitted ? (
+            <Card className="border-emerald-200 bg-emerald-50/90 shadow-sm shadow-emerald-950/5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+              <CardHeader>
+                <Badge variant="outline" className="w-fit border-emerald-300 bg-white text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                  Submitted draft
+                </Badge>
+                <CardTitle className="text-2xl">Your issue draft is ready for moderation.</CardTitle>
+                <CardDescription className="text-base leading-7 text-emerald-900/80 dark:text-emerald-100/80">
+                  Your submission has been staged. Once moderation begins, you will be able to track updates, decisions, and next action steps from your dashboard.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : null}
+
+          <Card className="border-slate-900/10 bg-white/90 shadow-2xl shadow-slate-950/10 dark:border-white/10 dark:bg-white/5">
+            <CardHeader className="border-b border-slate-900/5 dark:border-white/10">
+              <Badge variant="outline" className="w-fit border-slate-900/10 bg-slate-50 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+                Intake form
+              </Badge>
+              <CardTitle className="text-2xl">Keep it factual, local, and clear.</CardTitle>
+              <CardDescription className="text-base leading-7 text-slate-600 dark:text-slate-300">
+                The form is designed to help people explain the issue clearly and keep moderation simple.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-5 pt-6">
+              <form
+                className="space-y-5"
+                onSubmit={form.handleSubmit(() => {
+                  setSubmitted(true);
+                  form.reset(defaultValues);
+                })}
+              >
+                <div className="grid gap-5">
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Title</span>
+                    <Input
+                      {...form.register("title")}
+                      placeholder="Example: Broken streetlights on Indiranagar 12th Main"
+                      className="h-12 rounded-2xl border-slate-900/10 bg-white/90 dark:border-white/10 dark:bg-white/5"
+                    />
+                    {form.formState.errors.title ? <p className="text-sm text-rose-600">{form.formState.errors.title.message}</p> : null}
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Description</span>
+                    <textarea
+                      {...form.register("description")}
+                      rows={7}
+                      placeholder="Describe what is happening, who is affected, and what you have already observed. Keep it specific and verifiable."
+                      className="min-h-[180px] w-full rounded-2xl border border-slate-900/10 bg-white/90 px-4 py-3 text-base outline-none transition placeholder:text-slate-400 focus:border-slate-950 dark:border-white/10 dark:bg-white/5 dark:focus:border-white/40"
+                    />
+                    {form.formState.errors.description ? <p className="text-sm text-rose-600">{form.formState.errors.description.message}</p> : null}
+                  </label>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Category</span>
+                      <select
+                        {...form.register("category")}
+                        className="h-12 w-full rounded-2xl border border-slate-900/10 bg-white/90 px-4 text-base outline-none transition focus:border-slate-950 dark:border-white/10 dark:bg-white/5 dark:focus:border-white/40"
+                      >
+                        {categories.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Evidence level</span>
+                      <select
+                        {...form.register("evidenceLevel")}
+                        className="h-12 w-full rounded-2xl border border-slate-900/10 bg-white/90 px-4 text-base outline-none transition focus:border-slate-950 dark:border-white/10 dark:bg-white/5 dark:focus:border-white/40"
+                      >
+                        {evidenceLevels.map((level) => (
+                          <option key={level} value={level}>
+                            {level}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">State</span>
+                      <Input
+                        {...form.register("state")}
+                        placeholder="Karnataka"
+                        className="h-12 rounded-2xl border-slate-900/10 bg-white/90 dark:border-white/10 dark:bg-white/5"
+                      />
+                      {form.formState.errors.state ? <p className="text-sm text-rose-600">{form.formState.errors.state.message}</p> : null}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">District</span>
+                      <Input
+                        {...form.register("district")}
+                        placeholder="Bengaluru Urban"
+                        className="h-12 rounded-2xl border-slate-900/10 bg-white/90 dark:border-white/10 dark:bg-white/5"
+                      />
+                      {form.formState.errors.district ? <p className="text-sm text-rose-600">{form.formState.errors.district.message}</p> : null}
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr]">
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Nearby landmark or locality</span>
+                      <Input
+                        {...form.register("landmark")}
+                        placeholder="Near MG Road metro station"
+                        className="h-12 rounded-2xl border-slate-900/10 bg-white/90 dark:border-white/10 dark:bg-white/5"
+                      />
+                      {form.formState.errors.landmark ? <p className="text-sm text-rose-600">{form.formState.errors.landmark.message}</p> : null}
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Language</span>
+                      <select
+                        {...form.register("language")}
+                        className="h-12 w-full rounded-2xl border border-slate-900/10 bg-white/90 px-4 text-base outline-none transition focus:border-slate-950 dark:border-white/10 dark:bg-white/5 dark:focus:border-white/40"
+                      >
+                        <option value="en">English</option>
+                        <option value="hi">Hindi</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label className="space-y-2 rounded-3xl border border-dashed border-slate-900/15 bg-slate-50/90 p-5 dark:border-white/15 dark:bg-white/5">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white dark:bg-white dark:text-slate-950">
+                        <Upload className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-200">Evidence upload</div>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Images, PDFs, and short video clips are encouraged when safe to share.</div>
+                      </div>
+                    </div>
+                    <Input type="file" multiple accept="image/*,video/*,application/pdf" className="mt-4 h-12 rounded-2xl border-slate-900/10 bg-white/90 dark:border-white/10 dark:bg-white/5" />
+                  </label>
+
+                  <label className="flex items-start gap-3 rounded-2xl border border-slate-900/10 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/5">
+                    <input
+                      type="checkbox"
+                      {...form.register("consent")}
+                      className="mt-1 h-4 w-4 rounded border-slate-400 text-slate-950 focus:ring-slate-950"
+                    />
+                      <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      I confirm the submission is accurate to the best of my knowledge and I understand it will be reviewed under Kranti&apos;s moderation and safety policy.
+                    </span>
+                  </label>
+                  {form.formState.errors.consent ? <p className="text-sm text-rose-600">{form.formState.errors.consent.message}</p> : null}
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    Submissions are not public until moderation confirms the content meets the platform rules.
+                  </p>
+                  <Button type="submit" size="lg" className="h-12 rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200">
+                    Save issue draft
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </section>
+
+        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+          <Card className="border-slate-900/10 bg-white/90 shadow-sm shadow-slate-950/5 dark:border-white/10 dark:bg-white/5">
+            <CardHeader>
+              <Badge variant="outline" className="w-fit border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                Submission checklist
+              </Badge>
+              <CardTitle className="text-2xl">What makes a good civic report</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {checklist.map((item) => (
+                <div key={item} className="flex items-start gap-3 rounded-2xl border border-slate-900/10 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
+                  <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{item}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-900/10 bg-white/90 shadow-sm shadow-slate-950/5 dark:border-white/10 dark:bg-white/5">
+            <CardHeader>
+              <Badge variant="outline" className="w-fit border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                <Users className="mr-1 h-3.5 w-3.5" />
+                Moderation flow
+              </Badge>
+              <CardTitle className="text-2xl">What happens after submission</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {nextSteps.map((step, index) => (
+                <div key={step.title} className="rounded-2xl border border-slate-900/10 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/5">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-950 text-sm font-semibold text-white dark:bg-white dark:text-slate-950">
+                      {index + 1}
+                    </span>
+                    <div className="font-medium text-slate-950 dark:text-white">{step.title}</div>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{step.text}</p>
+                </div>
+              ))}
+            </CardContent>
+            <CardFooter className="bg-slate-50/80 dark:bg-white/5">
+              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                <FileText className="h-4 w-4" />
+                Your draft can be reviewed, organized, and moved into the public workflow.
+              </div>
+            </CardFooter>
+          </Card>
+        </aside>
+      </main>
+    </div>
+  );
+}
