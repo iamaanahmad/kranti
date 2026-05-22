@@ -18,6 +18,17 @@ export default function PrivacyPage() {
           </p>
         </div>
 
+        <Card className="border-slate-900/10 bg-white/85 dark:border-white/10 dark:bg-white/5">
+          <CardHeader>
+            <CardTitle className="text-2xl">Data requests and contact</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
+              For privacy questions, takedown requests, or user data requests, contact legal@kranti.org.in.
+            </p>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="border-slate-900/10 bg-white/85 dark:border-white/10 dark:bg-white/5">
             <CardHeader>

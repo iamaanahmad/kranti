@@ -135,3 +135,24 @@
     font-family: var(--font-heading);
   }
 }
+
+/* Cockroach overlay and footer runner: keep low z-index and avoid blocking header clicks */
+.cockroach-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10; /* header uses z-50 so header stays on top */
+}
+
+.cockroach-footer-track {
+  z-index: 0;
+}
+
+.cockroach-footer-racer {
+  pointer-events: none; /* don't block interactions */
+}
+
+/* Ensure header remains interactable on small screens */
+header[role="banner"], header {
+  z-index: 50;
+}

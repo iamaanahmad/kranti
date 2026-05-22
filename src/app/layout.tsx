@@ -4,6 +4,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
+import ClerkFallback from "@/components/clerk-fallback";
+import AppwriteSync from "@/components/appwrite-sync";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -45,6 +47,8 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col font-sans bg-background text-foreground">
         <ClerkProvider>
+          <ClerkFallback />
+          <AppwriteSync />
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />

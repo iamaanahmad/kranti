@@ -1,0 +1,138 @@
+type AppwriteJson = Record<string, unknown>;
+
+const appwriteEndpoint = process.env.APPWRITE_ENDPOINT ?? "https://citorg.in/v1";
+const appwriteProjectId = process.env.APPWRITE_PROJECT_ID ?? "kranti";
+const appwriteApiKey = process.env.APPWRITE_API_KEY;
+
+export const appwriteDatabaseId = process.env.APPWRITE_DATABASE_ID ?? "kranti";
+export const appwriteUsersCollectionId = process.env.APPWRITE_USERS_COLLECTION_ID ?? "users";
+export const appwriteIssuesCollectionId = process.env.APPWRITE_ISSUES_COLLECTION_ID ?? "issues";
+export const appwriteEvidenceCollectionId = process.env.APPWRITE_EVIDENCE_COLLECTION_ID ?? "evidence";
+export const appwriteSupportsCollectionId = process.env.APPWRITE_SUPPORTS_COLLECTION_ID ?? "supports";
+export const appwriteStorageBucketId = process.env.APPWRITE_STORAGE_BUCKET_ID ?? "evidence-files";
+
+function requireApiKey() {
+  if (!appwriteApiKey) {
+    throw new Error("APPWRITE_API_KEY is not configured.");
+  }
+}
+
+async function appwriteRequest(path: string, init: RequestInit = {}) {
+  requireApiKey();
+
+  const response = await fetch(`${appwriteEndpoint}${path}`, {
+    ...init,
+    headers: {
+      "X-Appwrite-Project": appwriteProjectId,
+      "X-Appwrite-Key": appwriteApiKey as string,
+      ...(init.headers ?? {}),
+    },
+    cache: "no-store",
+  });
+
+  const contentType = response.headers.get("content-type") ?? "";
+  const body = contentType.includes("application/json") ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const message =
+      typeof body === "object" && body && "message" in body ? String((body as { message?: unknown }).message) : response.statusText;
+    throw new Error(message || `Appwrite request failed (${response.status})`);
+  }
+
+  return body;
+}
+
+export async function createDocument(databaseId: string, collectionId: string, documentId: string, data: AppwriteJson) {
+  return appwriteRequest(`/databases/${databaseId}/collections/${collectionId}/documents`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ documentId, data }),
+  });
+}
+
+export async function updateDocument(databaseId: string, collectionId: string, documentId: string, data: AppwriteJson) {
+  return appwriteRequest(`/databases/${databaseId}/collections/${collectionId}/documents/${documentId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data }),
+  });
+}
+
+export async function upsertDocument(databaseId: string, collectionId: string, documentId: string, data: AppwriteJson) {
+  try {
+    return await createDocument(databaseId, collectionId, documentId, data);
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.toLowerCase().includes("already exists")) {
+      throw error;
+    }
+
+    return updateDocument(databaseId, collectionId, documentId, data);
+  }
+}
+
+export async function getDocument(databaseId: string, collectionId: string, documentId: string) {
+  return appwriteRequest(`/databases/${databaseId}/collections/${collectionId}/documents/${documentId}`);
+}
+
+export async function listDocuments(databaseId: string, collectionId: string, queries: string[] = []) {
+  const queryString = queries.map((query) => `queries[]=${encodeURIComponent(query)}`).join("&");
+  const path = `/databases/${databaseId}/collections/${collectionId}/documents${queryString ? `?${queryString}` : ""}`;
+
+  return appwriteRequest(path);
+}
+
+export async function deleteDocument(databaseId: string, collectionId: string, documentId: string) {
+  return appwriteRequest(`/databases/${databaseId}/collections/${collectionId}/documents/${documentId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function uploadFile(bucketId: string, fileId: string, file: File) {
+  const formData = new FormData();
+  formData.append("fileId", fileId);
+  formData.append("file", file, file.name);
+
+  return appwriteRequest(`/storage/buckets/${bucketId}/files`, {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export async function uploadFileBuffer(bucketId: string, fileId: string, fileName: string, buffer: Buffer, mimeType: string) {
+  const formData = new FormData();
+  formData.append("fileId", fileId);
+  formData.append("file", new File([new Uint8Array(buffer)], fileName, { type: mimeType }), fileName);
+
+  return appwriteRequest(`/storage/buckets/${bucketId}/files`, {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export async function deleteFile(bucketId: string, fileId: string) {
+  return appwriteRequest(`/storage/buckets/${bucketId}/files/${fileId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function downloadFile(bucketId: string, fileId: string) {
+  requireApiKey();
+
+  const response = await fetch(`${appwriteEndpoint}/storage/buckets/${bucketId}/files/${fileId}/download`, {
+    headers: {
+      "X-Appwrite-Project": appwriteProjectId,
+      "X-Appwrite-Key": appwriteApiKey as string,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Appwrite download failed (${response.status})`);
+  }
+
+  return response.arrayBuffer();
+}
+
+export function getFileViewUrl(bucketId: string, fileId: string) {
+  return `${appwriteEndpoint}/storage/buckets/${bucketId}/files/${fileId}/view?project=${appwriteProjectId}`;
+}

@@ -8,6 +8,7 @@ export function SiteFooter() {
           <Link href="/about">About</Link>
           <Link href="/issues">Issues</Link>
           <Link href="/campaigns">Campaigns</Link>
+          <Link href="/guidelines">Guidelines</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
         </nav>

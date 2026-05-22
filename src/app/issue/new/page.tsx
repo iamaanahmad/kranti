@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { z } from "zod";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -18,53 +18,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-const categories = [
-  "governance",
-  "infrastructure",
-  "education",
-  "healthcare",
-  "environment",
-  "transport",
-  "water",
-  "sanitation",
-  "safety",
-  "corruption",
-  "utilities",
-  "police",
-  "other",
-] as const;
-
-const evidenceLevels = ["low", "medium", "high"] as const;
-const languages = ["en", "hi"] as const;
-
-const issueSchema = z.object({
-  title: z.string().min(12, "Add a specific title."),
-  description: z.string().min(80, "Add enough context for a moderator to understand the issue."),
-  category: z.enum(categories),
-  state: z.string().min(2, "State is required."),
-  district: z.string().min(2, "District is required."),
-  landmark: z.string().min(3, "Add a nearby landmark or locality."),
-  evidenceLevel: z.enum(evidenceLevels),
-  language: z.enum(languages),
-  consent: z.boolean().refine((value) => value, {
-    message: "Please confirm the information is accurate to the best of your knowledge.",
-  }),
-});
-
-type IssueFormValues = z.infer<typeof issueSchema>;
-
-const defaultValues: IssueFormValues = {
-  title: "",
-  description: "",
-  category: "other",
-  state: "",
-  district: "",
-  landmark: "",
-  evidenceLevel: "medium",
-  language: "en",
-  consent: true,
-};
+import { browserStorage, ID } from "@/lib/appwrite-browser";
+import { evidenceLevels, issueCategories, issueDefaultValues, issueSubmissionSchema, type IssueSubmissionValues } from "@/lib/issue-form";
+import { validateEvidenceFile } from "@/lib/evidence";
 
 const checklist = [
   "Keep the complaint factual, local, and specific.",
@@ -89,13 +45,73 @@ const nextSteps = [
 ];
 
 export default function NewIssuePage() {
+  const router = useRouter();
+  const evidenceInputRef = useRef<HTMLInputElement | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const form = useForm<IssueFormValues>({
-    resolver: zodResolver(issueSchema),
-    defaultValues,
+  const form = useForm<IssueSubmissionValues>({
+    resolver: zodResolver(issueSubmissionSchema),
+    defaultValues: issueDefaultValues,
     mode: "onTouched",
   });
+
+  async function handleIssueSubmit(values: IssueSubmissionValues) {
+    setIsSaving(true);
+    setSubmitError(null);
+
+    try {
+      const files = Array.from(evidenceInputRef.current?.files ?? []);
+      const uploads: Array<{ fileId: string; name: string; size: number; mimeType: string; publicUrl: string }> = [];
+
+      for (const file of files) {
+        const validation = validateEvidenceFile(file);
+        if (!validation.ok) {
+          throw new Error(validation.message);
+        }
+
+        const uploaded = await browserStorage.createFile("evidence-files", ID.unique(), file);
+        uploads.push({
+          fileId: uploaded.$id,
+          name: file.name,
+          size: file.size,
+          mimeType: file.type || "application/octet-stream",
+          publicUrl: browserStorage.getFileView("evidence-files", uploaded.$id).toString(),
+        });
+      }
+
+      const response = await fetch("/api/issues", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          payload: values,
+          evidence: uploads,
+        }),
+      });
+
+      const body = (await response.json()) as { error?: string; issueSlug?: string };
+
+      if (!response.ok) {
+        throw new Error(body.error || "Failed to save the issue draft.");
+      }
+
+      setSubmitted(true);
+      form.reset(issueDefaultValues);
+      if (evidenceInputRef.current) {
+        evidenceInputRef.current.value = "";
+      }
+      if (body.issueSlug) {
+        router.push(`/issues/${body.issueSlug}`);
+      }
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Failed to save the issue draft.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f4f1ea] text-slate-950 dark:bg-slate-950 dark:text-slate-50">
@@ -149,10 +165,7 @@ export default function NewIssuePage() {
             <CardContent className="space-y-5 pt-6">
               <form
                 className="space-y-5"
-                onSubmit={form.handleSubmit(() => {
-                  setSubmitted(true);
-                  form.reset(defaultValues);
-                })}
+                onSubmit={form.handleSubmit(handleIssueSubmit)}
               >
                 <div className="grid gap-5">
                   <label className="space-y-2">
@@ -183,7 +196,7 @@ export default function NewIssuePage() {
                         {...form.register("category")}
                         className="h-12 w-full rounded-2xl border border-slate-900/10 bg-white/90 px-4 text-base outline-none transition focus:border-slate-950 dark:border-white/10 dark:bg-white/5 dark:focus:border-white/40"
                       >
-                        {categories.map((category) => (
+                          {issueCategories.map((category) => (
                           <option key={category} value={category}>
                             {category}
                           </option>
@@ -261,7 +274,14 @@ export default function NewIssuePage() {
                         <div className="text-sm text-slate-500 dark:text-slate-400">Images, PDFs, and short video clips are encouraged when safe to share.</div>
                       </div>
                     </div>
-                    <Input type="file" multiple accept="image/*,video/*,application/pdf" className="mt-4 h-12 rounded-2xl border-slate-900/10 bg-white/90 dark:border-white/10 dark:bg-white/5" />
+                    <Input
+                      type="file"
+                      multiple
+                      accept="image/*,video/*,application/pdf"
+                      ref={evidenceInputRef}
+                      name="evidence"
+                      className="mt-4 h-12 rounded-2xl border-slate-900/10 bg-white/90 dark:border-white/10 dark:bg-white/5"
+                    />
                   </label>
 
                   <label className="flex items-start gap-3 rounded-2xl border border-slate-900/10 bg-slate-50/90 p-4 dark:border-white/10 dark:bg-white/5">
@@ -277,12 +297,18 @@ export default function NewIssuePage() {
                   {form.formState.errors.consent ? <p className="text-sm text-rose-600">{form.formState.errors.consent.message}</p> : null}
                 </div>
 
+                {submitError ? (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/20 dark:text-rose-200">
+                    {submitError}
+                  </div>
+                ) : null}
+
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
                     Submissions are not public until moderation confirms the content meets the platform rules.
                   </p>
-                  <Button type="submit" size="lg" className="h-12 rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200">
-                    Save issue draft
+                  <Button type="submit" size="lg" disabled={isSaving} className="h-12 rounded-full bg-slate-950 px-6 text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200">
+                    {isSaving ? "Saving..." : "Save issue draft"}
                     <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Button>
                 </div>
