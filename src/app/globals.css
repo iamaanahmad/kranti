@@ -152,6 +152,50 @@
   pointer-events: none; /* don't block interactions */
 }
 
+.cockroach-pointer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 50px;
+  height: 50px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 60;
+  transform: translate3d(-9999px, -9999px, 0) translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  background: transparent;
+  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.18));
+  will-change: transform, opacity;
+  /* Add transform to the transition to create the trailing/following effect */
+  transition: opacity 160ms ease-out, transform 300ms ease-out;
+}
+
+.cockroach-pointer-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.cockroach-pointer:hover {
+  filter: drop-shadow(0 14px 22px rgb(0 0 0 / 0.22));
+}
+
+@media (max-width: 640px) {
+  .cockroach-pointer {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cockroach-pointer {
+    display: none;
+  }
+}
+
 /* Ensure header remains interactable on small screens */
 header[role="banner"], header {
   z-index: 50;

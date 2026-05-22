@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 import ClerkFallback from "@/components/clerk-fallback";
 import AppwriteSync from "@/components/appwrite-sync";
+import { CockroachPointer } from "@/components/cockroach-pointer";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -49,6 +50,7 @@ export default function RootLayout({
         <ClerkProvider>
           <ClerkFallback />
           <AppwriteSync />
+          <CockroachPointer />
           <SiteHeader />
           <main className="flex-1">{children}</main>
           <SiteFooter />

@@ -18,6 +18,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
+  const showSignedInActions = isLoaded && isSignedIn;
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-900/5 bg-[#f4f1ea]/85 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/75">
@@ -32,12 +33,12 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-2 lg:flex">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-2 overflow-x-auto whitespace-nowrap md:flex">
           {navItems.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link key={item.href} href={item.href}>
-                <Button variant={active ? "secondary" : "ghost"} size="sm">
+                <Button variant={active ? "secondary" : "ghost"} size="sm" className="whitespace-nowrap">
                   {item.label}
                 </Button>
               </Link>
@@ -45,16 +46,14 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
-          {!isLoaded ? (
-            <div className="h-9 w-24 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
-          ) : isSignedIn ? (
+        <div className="flex shrink-0 items-center gap-2">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
+              Dashboard
+            </Button>
+          </Link>
+          {showSignedInActions ? (
             <>
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-                  Dashboard
-                </Button>
-              </Link>
               <Button
                 size="sm"
                 className="rounded-full bg-slate-950 px-4 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
@@ -66,7 +65,7 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => router.push("/sign-in")}> 
+              <Button variant="ghost" size="sm" className="hidden md:inline-flex" onClick={() => router.push("/sign-in")}>
                 Log in
               </Button>
               <Button
