@@ -132,12 +132,13 @@ export function CockroachPointer() {
       return;
     }
 
-    const size = 96;
+    const drawSize = 96;
+    const visibleSize = 40;
     const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(size * pixelRatio);
-    canvas.height = Math.round(size * pixelRatio);
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
+    canvas.width = Math.round(drawSize * pixelRatio);
+    canvas.height = Math.round(drawSize * pixelRatio);
+    canvas.style.width = `${visibleSize}px`;
+    canvas.style.height = `${visibleSize}px`;
 
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
@@ -170,8 +171,8 @@ export function CockroachPointer() {
 
       updateTransform(current.x, current.y);
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      context.clearRect(0, 0, size, size);
-      drawRoach(context, size, timeRef.current, Math.min(movement / 8, 1), angleRef.current);
+      context.clearRect(0, 0, drawSize, drawSize);
+      drawRoach(context, drawSize, timeRef.current, Math.min(movement / 8, 1), angleRef.current);
       frameRef.current = window.requestAnimationFrame(updatePosition);
     };
 

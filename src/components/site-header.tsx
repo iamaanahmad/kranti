@@ -11,6 +11,7 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/issues", label: "Issues" },
   { href: "/campaigns", label: "Campaigns" },
+  { href: "/guides", label: "Guides" },
   { href: "/about", label: "About" },
 ];
 
@@ -46,14 +47,14 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="hidden md:inline-flex">
-              Dashboard
-            </Button>
-          </Link>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           {showSignedInActions ? (
             <>
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm">
+                  Dashboard
+                </Button>
+              </Link>
               <Button
                 size="sm"
                 className="rounded-full bg-slate-950 px-4 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
@@ -65,7 +66,7 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="hidden md:inline-flex" onClick={() => router.push("/sign-in")}>
+              <Button variant="ghost" size="sm" onClick={() => router.push("/sign-in")}>
                 Log in
               </Button>
               <Button

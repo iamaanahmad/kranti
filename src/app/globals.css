@@ -156,8 +156,8 @@
   position: fixed;
   left: 0;
   top: 0;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   opacity: 0;
   pointer-events: none;
   z-index: 60;
@@ -166,9 +166,8 @@
   place-items: center;
   border-radius: 9999px;
   background: transparent;
-  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 0.18));
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.18));
   will-change: transform, opacity;
-  /* Add transform to the transition to create the trailing/following effect */
   transition: opacity 160ms ease-out, transform 300ms ease-out;
 }
 
@@ -185,8 +184,8 @@
 
 @media (max-width: 640px) {
   .cockroach-pointer {
-    width: 80px;
-    height: 80px;
+    width: 56px;
+    height: 56px;
   }
 }
 
