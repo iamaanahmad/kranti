@@ -1,0 +1,122 @@
+{
+  "common": {
+    "home": "होम",
+    "about": "हमारे बारे में",
+    "issues": "मुद्दे",
+    "petitions": "याचिकाएं",
+    "campaigns": "अभियान",
+    "guides": "मार्गदर्शिकाएं",
+    "create": "बनाएं",
+    "signIn": "साइन इन करें",
+    "signOut": "साइन आउट करें",
+    "dashboard": "डैशबोर्ड",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफलता",
+    "cancel": "रद्द करें",
+    "save": "सहेजें",
+    "submit": "जमा करें",
+    "continue": "जारी रखें",
+    "back": "वापस",
+    "next": "अगला",
+    "previous": "पिछला",
+    "close": "बंद करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "view": "देखें",
+    "share": "साझा करें",
+    "support": "समर्थन करें",
+    "sign": "हस्ताक्षर करें",
+    "volunteer": "स्वयंसेवक"
+  },
+  "home": {
+    "hero": {
+      "title": "परिवर्तन के लिए अपनी आवाज उठाएं",
+      "subtitle": "भारत में कानूनी परिवर्तन के लिए एक जिम्मेदार नागरिक कार्रवाई मंच",
+      "cta": "अभी शुरू करें"
+    },
+    "stats": {
+      "issuesRaised": "उठाए गए मुद्दे",
+      "signatures": "हस्ताक्षर",
+      "resolutions": "समाधान"
+    }
+  },
+  "issues": {
+    "title": "मुद्दे ब्राउज़ करें",
+    "subtitle": "भारत भर के नागरिकों द्वारा रिपोर्ट की गई स्थानीय समस्याएं",
+    "create": "मुद्दा उठाएं",
+    "support": "इस मुद्दे का समर्थन करें",
+    "supported": "समर्थित",
+    "supporters": "समर्थक",
+    "status": {
+      "pending_review": "समीक्षा लंबित",
+      "open": "खुला",
+      "in_progress": "प्रगति में",
+      "resolved": "हल हो गया"
+    },
+    "categories": {
+      "infrastructure": "बुनियादी ढांचा",
+      "sanitation": "स्वच्छता",
+      "water": "जल आपूर्ति",
+      "electricity": "बिजली",
+      "roads": "सड़कें",
+      "healthcare": "स्वास्थ्य सेवा",
+      "education": "शिक्षा",
+      "environment": "पर्यावरण",
+      "safety": "सुरक्षा",
+      "other": "अन्य"
+    }
+  },
+  "petitions": {
+    "title": "याचिकाएं ब्राउज़ करें",
+    "subtitle": "अधिकारियों से विशिष्ट कार्रवाई की मांग करें",
+    "create": "याचिका शुरू करें",
+    "sign": "इस याचिका पर हस्ताक्षर करें",
+    "signed": "हस्ताक्षरित",
+    "signatures": "हस्ताक्षर",
+    "goal": "लक्ष्य",
+    "targetAuthority": "लक्षित प्राधिकरण",
+    "demand": "मांग"
+  },
+  "campaigns": {
+    "title": "अभियान ब्राउज़ करें",
+    "subtitle": "वास्तविक कार्रवाई के लिए सामूहिक दबाव",
+    "create": "अभियान शुरू करें",
+    "volunteer": "स्वयंसेवक बनें",
+    "volunteers": "स्वयंसेवक",
+    "goals": "अभियान लक्ष्य"
+  },
+  "dashboard": {
+    "welcome": "वापसी पर स्वागत है",
+    "myIssues": "मेरे उठाए गए मुद्दे",
+    "supported": "समर्थित याचिकाएं",
+    "notifications": "सूचनाएं",
+    "noIssues": "आपने अभी तक कोई मुद्दा प्रस्तुत नहीं किया है",
+    "noSupported": "आपने अभी तक किसी याचिका का समर्थन नहीं किया है",
+    "noNotifications": "अभी तक कोई सूचना नहीं"
+  },
+  "forms": {
+    "title": "शीर्षक",
+    "description": "विवरण",
+    "category": "श्रेणी",
+    "state": "राज्य",
+    "district": "जिला",
+    "landmark": "स्थल",
+    "language": "भाषा",
+    "evidence": "साक्ष्य",
+    "required": "आवश्यक",
+    "optional": "वैकल्पिक",
+    "selectState": "राज्य चुनें",
+    "selectCategory": "श्रेणी चुनें"
+  },
+  "notifications": {
+    "statusChange": "स्थिति अपडेट",
+    "newComment": "नई टिप्पणी",
+    "newSupport": "नया समर्थन",
+    "newSignature": "नया हस्ताक्षर",
+    "moderation": "मॉडरेशन अपडेट",
+    "markAllRead": "सभी को पढ़ा हुआ चिह्नित करें"
+  }
+}

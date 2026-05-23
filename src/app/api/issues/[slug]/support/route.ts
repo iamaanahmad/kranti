@@ -9,6 +9,7 @@ import {
   listDocuments,
   updateDocument,
 } from "@/lib/appwrite";
+import { notifyNewSupport } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ slug: str
   const { slug } = await params;
 
   const issueQuery = await listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [`equal("slug", ["${slug}"])`, "limit(1)"]);
-  const issue = (issueQuery as { documents?: Array<{ $id: string; supporter_count?: number }> }).documents?.[0];
+  const issue = (issueQuery as { documents?: Array<{ $id: string; supporter_count?: number; title?: string; created_by?: string }> }).documents?.[0];
 
   if (!issue) {
     return NextResponse.json({ error: "Issue not found" }, { status: 404 });
@@ -55,6 +56,21 @@ export async function POST(_: Request, { params }: { params: Promise<{ slug: str
       supporter_count: nextSupportCount,
       updated_at: new Date().toISOString(),
     });
+
+    // Send notification to issue creator
+    if (issue.created_by && issue.created_by !== userId) {
+      const supporterName = user?.firstName && user?.lastName 
+        ? `${user.firstName} ${user.lastName}` 
+        : user?.username || "Someone";
+      
+      await notifyNewSupport(
+        issue.created_by,
+        "issue",
+        issue.title || "your issue",
+        supporterName,
+        `/issues/${slug}`
+      );
+    }
   }
 
   return NextResponse.json({ ok: true, supportCount: nextSupportCount, alreadySupported: !supportDoc });

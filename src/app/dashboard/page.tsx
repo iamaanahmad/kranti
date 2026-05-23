@@ -24,14 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { IssueRecord } from "@/lib/content-types";
-
-const userNotifications: Array<{
-  id: string;
-  type: string;
-  message: string;
-  time: string;
-  read: boolean;
-}> = [];
+import type { NotificationRecord } from "@/lib/notifications";
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
@@ -39,6 +32,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"raised" | "supported" | "alerts">("raised");
   const [raisedIssues, setRaisedIssues] = useState<IssueRecord[]>([]);
   const [supportedIssues, setSupportedIssues] = useState<IssueRecord[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,8 +48,66 @@ export default function DashboardPage() {
         setSupportedIssues([]);
       });
 
+    // Fetch notifications
+    fetch("/api/notifications", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data) => {
+        setNotifications(Array.isArray(data?.notifications) ? data.notifications : []);
+      })
+      .catch(() => {
+        setNotifications([]);
+      });
+
     return () => controller.abort();
   }, []);
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await fetch("/api/notifications", { method: "PATCH" });
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Failed to mark notifications as read:", error);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      await fetch(`/api/notifications/${notificationId}`, { method: "PATCH" });
+      setNotifications((prev) =>
+        prev.map((n) => (n.$id === notificationId ? { ...n, read: true } : n))
+      );
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "status_change":
+        return Clock;
+      case "comment":
+        return FileText;
+      case "support":
+      case "signature":
+        return Heart;
+      case "moderation":
+        return AlertCircle;
+      default:
+        return Bell;
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (seconds < 60) return "just now";
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
 
   if (!isLoaded) {
     return (
@@ -149,7 +201,7 @@ export default function DashboardPage() {
               {[
                 { id: "raised", label: "My Raised Issues", count: raisedIssues.length, icon: FileText },
                 { id: "supported", label: "Backed Petitions", count: supportedIssues.length, icon: Heart },
-                { id: "alerts", label: "Moderation Alerts", count: userNotifications.length, icon: Bell }
+                { id: "alerts", label: "Moderation Alerts", count: notifications.filter(n => !n.read).length, icon: Bell }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -267,28 +319,65 @@ export default function DashboardPage() {
                     exit={{ opacity: 0, y: 5 }}
                     className="space-y-3"
                   >
-                    {userNotifications.map((notif) => (
-                      <div 
-                        key={notif.id}
-                        className={`flex gap-3 p-4 rounded-2xl border ${
-                          notif.read 
-                            ? "bg-slate-50 border-slate-900/5 dark:bg-slate-950/20 dark:border-white/5" 
-                            : "bg-amber-50/50 border-amber-900/10 dark:bg-amber-950/10 dark:border-amber-950/20"
-                        }`}
-                      >
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
-                          notif.read ? "bg-slate-100 text-slate-500 dark:bg-slate-900" : "bg-amber-100 text-amber-900 dark:bg-amber-950"
-                        }`}>
-                          {notif.type === "status_change" ? <Clock className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                        </span>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
-                            {notif.message}
-                          </p>
-                          <div className="text-xs text-slate-400">{notif.time}</div>
-                        </div>
+                    {notifications.length > 0 ? (
+                      <>
+                        {notifications.filter(n => !n.read).length > 0 && (
+                          <div className="flex justify-end">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleMarkAllAsRead}
+                              className="text-xs"
+                            >
+                              Mark all as read
+                            </Button>
+                          </div>
+                        )}
+                        {notifications.map((notif) => {
+                          const Icon = getNotificationIcon(notif.type);
+                          return (
+                            <div
+                              key={notif.$id}
+                              onClick={() => {
+                                if (!notif.read) handleMarkAsRead(notif.$id);
+                                if (notif.link) router.push(notif.link);
+                              }}
+                              className={`flex gap-3 p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-sm ${
+                                notif.read
+                                  ? "bg-slate-50 border-slate-900/5 dark:bg-slate-950/20 dark:border-white/5"
+                                  : "bg-amber-50/50 border-amber-900/10 dark:bg-amber-950/10 dark:border-amber-950/20"
+                              }`}
+                            >
+                              <span
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+                                  notif.read
+                                    ? "bg-slate-100 text-slate-500 dark:bg-slate-900"
+                                    : "bg-amber-100 text-amber-900 dark:bg-amber-950"
+                                }`}
+                              >
+                                <Icon className="h-4 w-4" />
+                              </span>
+                              <div className="flex-1 space-y-1">
+                                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                                  {notif.title}
+                                </p>
+                                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                                  {notif.message}
+                                </p>
+                                <div className="text-xs text-slate-400">{formatTimeAgo(notif.created_at)}</div>
+                              </div>
+                              {notif.link && (
+                                <ExternalLink className="h-4 w-4 text-slate-400 shrink-0" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      <div className="text-center py-10 text-slate-500">
+                        No notifications yet.
                       </div>
-                    ))}
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>

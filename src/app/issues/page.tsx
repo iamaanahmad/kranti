@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { IssueRecord } from "@/lib/content-types";
-import IssueMap from "@/components/issue-map";
+import { IssuesMap } from "@/components/issues-map";
 
 const statesList = ["All States", "Maharashtra", "Karnataka", "Delhi"];
 const categoriesList = ["All Categories", "roads", "water", "safety", "sanitation", "health"];
@@ -228,7 +228,7 @@ export default function IssuesPage() {
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.3 }}
             >
-              <IssueMap issues={filteredIssues} />
+              <IssuesMap issues={filteredIssues} />
             </motion.div>
           ) : (
             <motion.div

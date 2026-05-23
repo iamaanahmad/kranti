@@ -1,0 +1,122 @@
+{
+  "common": {
+    "home": "Home",
+    "about": "About",
+    "issues": "Issues",
+    "petitions": "Petitions",
+    "campaigns": "Campaigns",
+    "guides": "Guides",
+    "create": "Create",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "dashboard": "Dashboard",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "share": "Share",
+    "support": "Support",
+    "sign": "Sign",
+    "volunteer": "Volunteer"
+  },
+  "home": {
+    "hero": {
+      "title": "Raise your voice for change",
+      "subtitle": "A responsible civic action platform for lawful change in India",
+      "cta": "Start Now"
+    },
+    "stats": {
+      "issuesRaised": "Issues Raised",
+      "signatures": "Signatures",
+      "resolutions": "Resolutions"
+    }
+  },
+  "issues": {
+    "title": "Browse Issues",
+    "subtitle": "Local problems reported by citizens across India",
+    "create": "Raise an Issue",
+    "support": "Support this issue",
+    "supported": "Supported",
+    "supporters": "supporters",
+    "status": {
+      "pending_review": "Pending Review",
+      "open": "Open",
+      "in_progress": "In Progress",
+      "resolved": "Resolved"
+    },
+    "categories": {
+      "infrastructure": "Infrastructure",
+      "sanitation": "Sanitation",
+      "water": "Water Supply",
+      "electricity": "Electricity",
+      "roads": "Roads",
+      "healthcare": "Healthcare",
+      "education": "Education",
+      "environment": "Environment",
+      "safety": "Safety",
+      "other": "Other"
+    }
+  },
+  "petitions": {
+    "title": "Browse Petitions",
+    "subtitle": "Demand specific action from authorities",
+    "create": "Start a Petition",
+    "sign": "Sign this petition",
+    "signed": "Signed",
+    "signatures": "signatures",
+    "goal": "Goal",
+    "targetAuthority": "Target Authority",
+    "demand": "Demand"
+  },
+  "campaigns": {
+    "title": "Browse Campaigns",
+    "subtitle": "Collective pressure for real action",
+    "create": "Launch a Campaign",
+    "volunteer": "Volunteer",
+    "volunteers": "volunteers",
+    "goals": "Campaign Goals"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "myIssues": "My Raised Issues",
+    "supported": "Backed Petitions",
+    "notifications": "Notifications",
+    "noIssues": "You have not submitted any issues yet",
+    "noSupported": "You have not backed any petitions yet",
+    "noNotifications": "No notifications yet"
+  },
+  "forms": {
+    "title": "Title",
+    "description": "Description",
+    "category": "Category",
+    "state": "State",
+    "district": "District",
+    "landmark": "Landmark",
+    "language": "Language",
+    "evidence": "Evidence",
+    "required": "Required",
+    "optional": "Optional",
+    "selectState": "Select state",
+    "selectCategory": "Select category"
+  },
+  "notifications": {
+    "statusChange": "Status Updated",
+    "newComment": "New Comment",
+    "newSupport": "New Support",
+    "newSignature": "New Signature",
+    "moderation": "Moderation Update",
+    "markAllRead": "Mark all as read"
+  }
+}

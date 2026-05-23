@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import {
@@ -10,6 +10,7 @@ import {
   listDocuments,
   updateDocument,
 } from "@/lib/appwrite";
+import { notifyNewSignature } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const user = await currentUser();
   const { slug } = await params;
 
   try {
@@ -34,6 +36,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     }
 
     const petitionId = String(petitionDoc.$id);
+    const petitionTitle = String(petitionDoc.title || "");
+    const createdBy = String(petitionDoc.created_by || "");
 
     const existingSignatures = await listDocuments(appwriteDatabaseId, appwriteSignaturesCollectionId, [
       `equal("petition_id", ["${petitionId}"])`,
@@ -56,6 +60,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     await updateDocument(appwriteDatabaseId, appwritePetitionsCollectionId, petitionId, {
       signature_count: currentCount + 1,
     });
+
+    // Send notification to petition creator
+    if (createdBy && createdBy !== userId) {
+      const signerName = user?.firstName && user?.lastName 
+        ? `${user.firstName} ${user.lastName}` 
+        : user?.username || "Someone";
+      
+      await notifyNewSignature(
+        createdBy,
+        petitionTitle,
+        signerName,
+        `/petitions/${slug}`
+      );
+    }
 
     return NextResponse.json({ ok: true, message: "Petition signed successfully" });
   } catch (error) {
