@@ -15,7 +15,22 @@ export function SiteFooter() {
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
         </nav>
-        <div className="text-sm text-slate-500 dark:text-slate-400">© {new Date().getFullYear()} Kranti — People first civic action</div>
+        <div className="space-y-2">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
+            © {new Date().getFullYear()} Kranti — People first civic action
+          </div>
+          <div className="text-xs text-slate-400 dark:text-slate-500">
+            Developed & Maintained by{" "}
+            <a
+              href="https://www.cit.org.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100 underline underline-offset-2"
+            >
+              Centre for Information Technology India
+            </a>
+          </div>
+        </div>
       </div>
     </footer>
   );
