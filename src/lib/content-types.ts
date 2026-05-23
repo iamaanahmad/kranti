@@ -60,3 +60,44 @@ export interface PetitionRecord {
   createdAt: string;
   evidence: IssueEvidence[];
 }
+
+export interface ReportRecord {
+  $id: string;
+  title: string;
+  slug: string;
+  description: string;
+  incidentType: string;
+  incidentDate: string;
+  state: string;
+  district: string;
+  landmark?: string;
+  status: "pending_review" | "under_investigation" | "verified" | "resolved";
+  visibility: "moderated" | "public" | "restricted";
+  evidence_count: number;
+  created_by: string;
+  creatorName: string;
+  creatorAvatar?: string;
+  language: string;
+  createdAt: string;
+  evidence: IssueEvidence[];
+}
+
+export interface CampaignRecord {
+  $id: string;
+  title: string;
+  slug: string;
+  description: string;
+  goals: string;
+  category: string;
+  state: string;
+  status: "pending_review" | "active" | "completed" | "paused";
+  volunteer_count: number;
+  featured: boolean;
+  created_by: string;
+  creatorName: string;
+  creatorAvatar?: string;
+  language: string;
+  start_date?: string;
+  end_date?: string;
+  createdAt: string;
+}

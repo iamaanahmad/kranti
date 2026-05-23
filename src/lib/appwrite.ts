@@ -9,6 +9,7 @@ export const appwriteUsersCollectionId = process.env.APPWRITE_USERS_COLLECTION_I
 export const appwriteIssuesCollectionId = process.env.APPWRITE_ISSUES_COLLECTION_ID ?? "issues";
 export const appwritePetitionsCollectionId = process.env.APPWRITE_PETITIONS_COLLECTION_ID ?? "petitions";
 export const appwriteReportsCollectionId = process.env.APPWRITE_REPORTS_COLLECTION_ID ?? "reports";
+export const appwriteCampaignsCollectionId = process.env.APPWRITE_CAMPAIGNS_COLLECTION_ID ?? "campaigns";
 export const appwriteSignaturesCollectionId = process.env.APPWRITE_SIGNATURES_COLLECTION_ID ?? "signatures";
 export const appwriteEvidenceCollectionId = process.env.APPWRITE_EVIDENCE_COLLECTION_ID ?? "evidence";
 export const appwriteSupportsCollectionId = process.env.APPWRITE_SUPPORTS_COLLECTION_ID ?? "supports";

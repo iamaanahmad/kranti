@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/", label: "Home" },
+  { href: "/create", label: "Create" },
   { href: "/issues", label: "Issues" },
   { href: "/petitions", label: "Petitions" },
-  { href: "/campaigns", label: "Campaigns" },
   { href: "/guides", label: "Guides" },
   { href: "/about", label: "About" },
 ];
@@ -59,9 +59,9 @@ export function SiteHeader() {
               <Button
                 size="sm"
                 className="rounded-full bg-slate-950 px-4 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
-                onClick={() => router.push("/issue/new")}
+                onClick={() => router.push("/create")}
               >
-                Raise voice
+                Create
               </Button>
               <UserButton />
             </>
