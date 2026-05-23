@@ -27,7 +27,7 @@ export async function POST(_: Request, { params }: { params: Promise<{ slug: str
   const { slug } = await params;
 
   const issueQuery = await listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [`equal("slug", ["${slug}"])`, "limit(1)"]);
-  const issue = (issueQuery as { documents?: Array<{ $id: string; supportCount?: number }> }).documents?.[0];
+  const issue = (issueQuery as { documents?: Array<{ $id: string; supporter_count?: number }> }).documents?.[0];
 
   if (!issue) {
     return NextResponse.json({ error: "Issue not found" }, { status: 404 });
@@ -35,10 +35,10 @@ export async function POST(_: Request, { params }: { params: Promise<{ slug: str
 
   const supportId = supportDocumentId(issue.$id, userId);
   const supportPayload = {
-    issueId: issue.$id,
-    userId,
-    createdAt: new Date().toISOString(),
-    supporterName: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "Supporter",
+    issue_id: issue.$id,
+    user_id: userId,
+    kind: "support",
+    note: null,
   };
 
   const supportDoc = await createDocument(appwriteDatabaseId, appwriteSupportsCollectionId, supportId, supportPayload).catch((error) => {
@@ -48,12 +48,12 @@ export async function POST(_: Request, { params }: { params: Promise<{ slug: str
     throw error;
   });
 
-  const nextSupportCount = supportDoc ? (issue.supportCount ?? 0) + 1 : issue.supportCount ?? 0;
+  const nextSupportCount = supportDoc ? (issue.supporter_count ?? 0) + 1 : issue.supporter_count ?? 0;
 
   if (supportDoc) {
     await updateDocument(appwriteDatabaseId, appwriteIssuesCollectionId, issue.$id, {
-      supportCount: nextSupportCount,
-      updatedAt: new Date().toISOString(),
+      supporter_count: nextSupportCount,
+      updated_at: new Date().toISOString(),
     });
   }
 

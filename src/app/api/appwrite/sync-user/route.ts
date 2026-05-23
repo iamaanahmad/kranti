@@ -22,18 +22,18 @@ export async function POST() {
   const primaryPhone = user.phoneNumbers.find((phoneNumber) => phoneNumber.id === user.primaryPhoneNumberId)?.phoneNumber ?? null;
 
   const document = await upsertDocument(appwriteDatabaseId, appwriteUsersCollectionId, user.id, {
-    clerkUserId: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    fullName: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || primaryEmail || "Kranti user",
+    clerk_id: user.id,
+    display_name: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || primaryEmail || "Kranti user",
     email: primaryEmail,
     phone: primaryPhone,
-    imageUrl: user.imageUrl,
+    avatar_url: user.imageUrl,
     username: user.username,
     role: "citizen",
     verified: Boolean(user.primaryEmailAddressId || user.primaryPhoneNumberId),
-    updatedAt: new Date().toISOString(),
-    createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
+    trust_score: 10,
+    consent_accepted: true,
+    updated_at: new Date().toISOString(),
+    created_at: user.createdAt ? new Date(user.createdAt).toISOString() : new Date().toISOString(),
   });
 
   return NextResponse.json({ ok: true, userId: user.id, document });

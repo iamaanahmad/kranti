@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { mockIssues, mockUsers, IssueRecord } from "@/lib/mock-data";
+import { IssueRecord } from "@/lib/content-types";
 
 interface AdminLog {
   id: string;
@@ -44,34 +44,15 @@ interface AdminLog {
 
 export default function AdminPage() {
   const { user, isLoaded } = useUser();
-  const [issues, setIssues] = useState<IssueRecord[]>(mockIssues);
-  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(
-    mockIssues.find(i => i.status === "pending_review")?.$id || mockIssues[0]?.$id || null
-  );
+  const [issues, setIssues] = useState<IssueRecord[]>([]);
+  const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending_review" | "open" | "in_progress" | "resolved">("pending_review");
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [moderationLogs, setModerationLogs] = useState<AdminLog[]>([
-    {
-      id: "log_init_1",
-      issueId: "issue_3",
-      issueTitle: "Lack of clean drinking water supply in Government School, Okhla",
-      action: "RESOLVE",
-      reason: "School administration verified water filter repair work order. Filter successfully replaced.",
-      timestamp: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
-      moderatorName: "Karan Johar (Lead Mod)"
-    },
-    {
-      id: "log_init_2",
-      issueId: "issue_2",
-      issueTitle: "Toxic chemical dumping in Bellandur Lake inlets",
-      action: "APPROVE",
-      reason: "Confirmed clean video evidence of tankers. Validated GPS tags on metadata.",
-      timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), // 5 hours ago
-      moderatorName: "Anjali Mehta (Mod)"
-    }
-  ]);
+  const [moderationLogs, setModerationLogs] = useState<AdminLog[]>([]);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Derived Statistics
   const stats = useMemo(() => {
@@ -104,107 +85,100 @@ export default function AdminPage() {
     return issues.find((i) => i.$id === selectedIssueId) || null;
   }, [issues, selectedIssueId]);
 
-  // Handle Approve Action
-  const handleApprove = (issueId: string) => {
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/issues", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data) => {
+        const nextIssues = Array.isArray(data?.issues) ? data.issues : [];
+        setIssues(nextIssues);
+        setSelectedIssueId((current) => current || nextIssues.find((issue: IssueRecord) => issue.status === "pending_review")?.$id || nextIssues[0]?.$id || null);
+      })
+      .catch(() => {
+        setIssues([]);
+        setSelectedIssueId(null);
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  async function callModerate(issueId: string, action: string, reason: string) {
+    setActionLoading(action);
+    try {
+      const res = await fetch("/api/admin/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ issueId, action, reason }),
+      });
+      if (res.status === 403) {
+        setAccessDenied(true);
+        return null;
+      }
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  const handleApprove = async (issueId: string) => {
     const issueToUpdate = issues.find(i => i.$id === issueId);
     if (!issueToUpdate) return;
-
-    setIssues(prev => 
-      prev.map(issue => 
-        issue.$id === issueId ? { ...issue, status: "open" } : issue
-      )
-    );
-
-    const newLog: AdminLog = {
-      id: `log_${Date.now()}`,
-      issueId,
-      issueTitle: issueToUpdate.title,
-      action: "APPROVE",
-      reason: "Meets verification criteria. Clear geo-evidence and neutral narrative tone.",
-      timestamp: new Date().toISOString(),
-      moderatorName: user?.fullName || "Moderator Session (Mock)"
-    };
-
-    setModerationLogs(prev => [newLog, ...prev]);
+    const result = await callModerate(issueId, "approve", "Meets verification criteria. Clear geo-evidence and neutral narrative tone.");
+    if (!result) return;
+    setIssues(prev => prev.map(issue => issue.$id === issueId ? { ...issue, status: "open" } : issue));
+    setModerationLogs(prev => [{
+      id: `log_${Date.now()}`, issueId, issueTitle: issueToUpdate.title,
+      action: "APPROVE", reason: "Meets verification criteria.",
+      timestamp: new Date().toISOString(), moderatorName: user?.fullName || "Moderator"
+    }, ...prev]);
   };
 
-  // Handle Reject Action (Doxxing / Spam)
-  const handleRejectSubmit = () => {
+  const handleRejectSubmit = async () => {
     if (!selectedIssueId) return;
     const issueToUpdate = issues.find(i => i.$id === selectedIssueId);
     if (!issueToUpdate) return;
-
-    // Filter out or mark issue as visibility restricted
-    setIssues(prev => 
-      prev.filter(issue => issue.$id !== selectedIssueId)
-    );
-
-    const newLog: AdminLog = {
-      id: `log_${Date.now()}`,
-      issueId: selectedIssueId,
-      issueTitle: issueToUpdate.title,
-      action: "REJECT",
-      reason: rejectReason || "Content violates platform guidelines (Spam/Doxxing).",
-      timestamp: new Date().toISOString(),
-      moderatorName: user?.fullName || "Moderator Session (Mock)"
-    };
-
-    setModerationLogs(prev => [newLog, ...prev]);
+    const reason = rejectReason || "Content violates platform guidelines (Spam/Doxxing).";
+    const result = await callModerate(selectedIssueId, "reject", reason);
+    if (!result) return;
+    setIssues(prev => prev.filter(issue => issue.$id !== selectedIssueId));
+    setModerationLogs(prev => [{
+      id: `log_${Date.now()}`, issueId: selectedIssueId, issueTitle: issueToUpdate.title,
+      action: "REJECT", reason,
+      timestamp: new Date().toISOString(), moderatorName: user?.fullName || "Moderator"
+    }, ...prev]);
     setShowRejectDialog(false);
     setRejectReason("");
-    
-    // Select next pending review or first issue available
     const nextPending = issues.find(i => i.$id !== selectedIssueId && i.status === "pending_review");
     const nextFirst = issues.find(i => i.$id !== selectedIssueId);
     setSelectedIssueId(nextPending?.$id || nextFirst?.$id || null);
   };
 
-  // Handle Escalate/In Progress Action
-  const handleEscalate = (issueId: string) => {
+  const handleEscalate = async (issueId: string) => {
     const issueToUpdate = issues.find(i => i.$id === issueId);
     if (!issueToUpdate) return;
-
-    setIssues(prev => 
-      prev.map(issue => 
-        issue.$id === issueId ? { ...issue, status: "in_progress" } : issue
-      )
-    );
-
-    const newLog: AdminLog = {
-      id: `log_${Date.now()}`,
-      issueId,
-      issueTitle: issueToUpdate.title,
-      action: "ESCALATE",
-      reason: "Escalated to local authorities. Direct RTI request formulated.",
-      timestamp: new Date().toISOString(),
-      moderatorName: user?.fullName || "Moderator Session (Mock)"
-    };
-
-    setModerationLogs(prev => [newLog, ...prev]);
+    const result = await callModerate(issueId, "escalate", "Escalated to local authorities. Direct RTI request formulated.");
+    if (!result) return;
+    setIssues(prev => prev.map(issue => issue.$id === issueId ? { ...issue, status: "in_progress" } : issue));
+    setModerationLogs(prev => [{
+      id: `log_${Date.now()}`, issueId, issueTitle: issueToUpdate.title,
+      action: "ESCALATE", reason: "Escalated to local authorities.",
+      timestamp: new Date().toISOString(), moderatorName: user?.fullName || "Moderator"
+    }, ...prev]);
   };
 
-  // Handle Resolve Action
-  const handleResolve = (issueId: string) => {
+  const handleResolve = async (issueId: string) => {
     const issueToUpdate = issues.find(i => i.$id === issueId);
     if (!issueToUpdate) return;
-
-    setIssues(prev => 
-      prev.map(issue => 
-        issue.$id === issueId ? { ...issue, status: "resolved" } : issue
-      )
-    );
-
-    const newLog: AdminLog = {
-      id: `log_${Date.now()}`,
-      issueId,
-      issueTitle: issueToUpdate.title,
-      action: "RESOLVE",
-      reason: "Citizen and moderator verified civic resolution details.",
-      timestamp: new Date().toISOString(),
-      moderatorName: user?.fullName || "Moderator Session (Mock)"
-    };
-
-    setModerationLogs(prev => [newLog, ...prev]);
+    const result = await callModerate(issueId, "resolve", "Citizen and moderator verified civic resolution details.");
+    if (!result) return;
+    setIssues(prev => prev.map(issue => issue.$id === issueId ? { ...issue, status: "resolved" } : issue));
+    setModerationLogs(prev => [{
+      id: `log_${Date.now()}`, issueId, issueTitle: issueToUpdate.title,
+      action: "RESOLVE", reason: "Verified civic resolution.",
+      timestamp: new Date().toISOString(), moderatorName: user?.fullName || "Moderator"
+    }, ...prev]);
   };
 
   const getStatusBadge = (status: string) => {
@@ -231,6 +205,20 @@ export default function AdminPage() {
     );
   }
 
+  if (accessDenied) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f4f1ea] dark:bg-slate-950">
+        <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+          <ShieldAlert className="h-12 w-12 text-rose-500" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Access Denied</h2>
+          <p className="text-sm text-slate-500">
+            Your account does not have moderator or admin privileges. Contact the platform administrator to request access.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f1ea] px-6 py-10 text-slate-950 dark:bg-slate-950 dark:text-slate-50 lg:px-8">
       {/* Background radial glow */}
@@ -247,8 +235,8 @@ export default function AdminPage() {
               <Badge variant="outline" className="border-slate-900/10 bg-white/80 px-3 py-1 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                 Administration Panel
               </Badge>
-              <Badge className="bg-amber-500 text-slate-950 font-semibold border-none rounded-full px-2.5 py-0.5 text-[10px] animate-pulse">
-                Mock DB Mode
+              <Badge className="bg-emerald-500 text-slate-950 font-semibold border-none rounded-full px-2.5 py-0.5 text-[10px]">
+                Live DB Mode
               </Badge>
             </div>
             <h1 className="text-4xl font-semibold tracking-tight">Moderation Queue</h1>
@@ -425,7 +413,7 @@ export default function AdminPage() {
                       <div className="text-right">
                         <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Reporter Trust Score</p>
                         <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                          {mockUsers[selectedIssue.created_by as keyof typeof mockUsers]?.trust_score ?? 75} / 100
+                          Live profile lookup pending
                         </p>
                       </div>
                     </div>
@@ -518,6 +506,7 @@ export default function AdminPage() {
                       <>
                         <Button
                           onClick={() => setShowRejectDialog(true)}
+                          disabled={!!actionLoading}
                           variant="outline"
                           className="rounded-xl h-10 border-rose-250 bg-rose-50/20 text-rose-700 hover:bg-rose-50 hover:text-rose-800 dark:bg-rose-950/10 dark:text-rose-400 dark:border-rose-900"
                         >
@@ -526,9 +515,14 @@ export default function AdminPage() {
                         </Button>
                         <Button
                           onClick={() => handleApprove(selectedIssue.$id)}
+                          disabled={!!actionLoading}
                           className="rounded-xl h-10 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center"
                         >
-                          <Check className="h-4 w-4 mr-1.5" />
+                          {actionLoading === "approve" ? (
+                            <div className="h-4 w-4 mr-1.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          ) : (
+                            <Check className="h-4 w-4 mr-1.5" />
+                          )}
                           Approve & Publish
                         </Button>
                       </>
@@ -541,19 +535,29 @@ export default function AdminPage() {
                           {selectedIssue.status !== "in_progress" && selectedIssue.status !== "resolved" && (
                             <Button
                               onClick={() => handleEscalate(selectedIssue.$id)}
+                              disabled={!!actionLoading}
                               variant="outline"
                               className="rounded-xl h-10 border-slate-900/10 bg-white hover:bg-slate-50 dark:border-white/10 dark:bg-slate-900"
                             >
-                              <Clock className="h-4 w-4 mr-1.5 text-amber-500" />
+                              {actionLoading === "escalate" ? (
+                                <div className="h-4 w-4 mr-1.5 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
+                              ) : (
+                                <Clock className="h-4 w-4 mr-1.5 text-amber-500" />
+                              )}
                               Mark Escalated
                             </Button>
                           )}
                           {selectedIssue.status !== "resolved" && (
                             <Button
                               onClick={() => handleResolve(selectedIssue.$id)}
+                              disabled={!!actionLoading}
                               className="rounded-xl h-10 bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
                             >
-                              <CheckCircle2 className="h-4 w-4 mr-1.5 text-emerald-400" />
+                              {actionLoading === "resolve" ? (
+                                <div className="h-4 w-4 mr-1.5 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent" />
+                              ) : (
+                                <CheckCircle2 className="h-4 w-4 mr-1.5 text-emerald-400" />
+                              )}
                               Mark Resolved
                             </Button>
                           )}
@@ -666,8 +670,12 @@ export default function AdminPage() {
               </Button>
               <Button
                 onClick={handleRejectSubmit}
+                disabled={!!actionLoading}
                 className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl"
               >
+                {actionLoading === "reject" ? (
+                  <div className="h-4 w-4 mr-1.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : null}
                 Confirm Rejection
               </Button>
             </div>

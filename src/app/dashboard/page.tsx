@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -23,36 +23,39 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockIssues, IssueRecord } from "@/lib/mock-data";
+import { IssueRecord } from "@/lib/content-types";
 
-const userNotifications = [
-  {
-    id: "not_1",
-    type: "status_change",
-    message: "Your issue 'Primary Health Center unstaffed during emergency hours' is now in pending review.",
-    time: "2 hours ago",
-    read: false,
-  },
-  {
-    id: "not_2",
-    type: "support_milestone",
-    message: "The issue 'Severe potholes on Western Express Highway' you supported reached 300 signatures!",
-    time: "1 day ago",
-    read: true,
-  },
-  {
-    id: "not_3",
-    type: "system_update",
-    message: "Welcome to Kranti. Your citizen verification profile is now registered.",
-    time: "3 days ago",
-    read: true,
-  }
-];
+const userNotifications: Array<{
+  id: string;
+  type: string;
+  message: string;
+  time: string;
+  read: boolean;
+}> = [];
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"raised" | "supported" | "alerts">("raised");
+  const [raisedIssues, setRaisedIssues] = useState<IssueRecord[]>([]);
+  const [supportedIssues, setSupportedIssues] = useState<IssueRecord[]>([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/dashboard", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data) => {
+        setRaisedIssues(Array.isArray(data?.raisedIssues) ? data.raisedIssues : []);
+        setSupportedIssues(Array.isArray(data?.supportedIssues) ? data.supportedIssues : []);
+      })
+      .catch(() => {
+        setRaisedIssues([]);
+        setSupportedIssues([]);
+      });
+
+    return () => controller.abort();
+  }, []);
 
   if (!isLoaded) {
     return (
@@ -64,16 +67,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // Filter issues based on mock user simulation
-  // Clerk userID fallback or Aarav Sharma mock user
-  const raisedIssues = mockIssues.filter(
-    (issue) => issue.created_by === "mock_citizen_1"
-  );
-  
-  const supportedIssues = mockIssues.filter(
-    (issue) => issue.$id === "issue_2" || issue.$id === "issue_3"
-  );
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {

@@ -6,22 +6,16 @@ import { Button } from "@/components/ui/button";
 
 interface ShareButtonsProps {
   title: string;
-  slug: string;
+  url: string;
+  description: string;
 }
 
-export function ShareButtons({ title, slug }: ShareButtonsProps) {
+export function ShareButtons({ title, url, description }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
-
-  const getShareUrl = () => {
-    if (typeof window !== "undefined") {
-      return `${window.location.origin}/issues/${slug}`;
-    }
-    return `https://kranti.org.in/issues/${slug}`;
-  };
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(getShareUrl());
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -30,9 +24,8 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
   };
 
   const handleWhatsApp = () => {
-    const url = getShareUrl();
     const text = encodeURIComponent(
-      `✊ *Civic Action Alert on Kranti* ✊\n\n*${title}*\n\nThis issue needs our collective backing. Please review the documented evidence, support this petition, and sign it here:\n👉 ${url}`
+      `✊ *Civic Action Alert on Kranti* ✊\n\n*${title}*\n\n${description}\n\n👉 ${url}`
     );
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   };

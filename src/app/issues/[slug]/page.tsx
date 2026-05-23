@@ -24,11 +24,13 @@ import IssueComments from "@/components/issue-comments";
 import { ShareButtons } from "@/components/share-buttons";
 import {
   appwriteDatabaseId,
+  appwriteEvidenceCollectionId,
+  appwriteCommentsCollectionId,
+  appwriteUsersCollectionId,
   appwriteIssuesCollectionId,
-  getFileViewUrl,
   listDocuments,
 } from "@/lib/appwrite";
-import { mockIssues, mockComments, IssueRecord } from "@/lib/mock-data";
+import { IssueRecord } from "@/lib/content-types";
 
 type IssueEvidence = {
   fileId: string;
@@ -56,46 +58,58 @@ const statusSteps = [
 export default async function IssueDetailPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
   let issue: IssueRecord | null = null;
+  let commentsResponse: unknown = { documents: [] };
 
   try {
-    // 1. Try to fetch from remote Appwrite
-    const response = await listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [
-      `equal("slug", ["${slug}"])`,
-      "limit(1)"
+    const [issueResponse, evidenceResponse, usersResponse, commentsData] = await Promise.all([
+      listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [`equal("slug", ["${slug}"])`, "limit(1)"]),
+      listDocuments(appwriteDatabaseId, appwriteEvidenceCollectionId, []),
+      listDocuments(appwriteDatabaseId, appwriteUsersCollectionId, []),
+      listDocuments(appwriteDatabaseId, appwriteCommentsCollectionId, []),
     ]);
-    const doc = (response as { documents?: any[] }).documents?.[0];
+    commentsResponse = commentsData;
+
+    const doc = (issueResponse as { documents?: Array<Record<string, unknown>> }).documents?.[0];
     if (doc) {
-      // Map Appwrite record fields to our standard schema if needed
+      const creatorId = String(doc.created_by ?? doc.createdBy ?? "");
+      const creatorRow = ((usersResponse as { documents?: Array<Record<string, unknown>> }).documents ?? []).find((userDocument) => {
+        return String(userDocument.clerk_id ?? userDocument.clerkUserId ?? userDocument.$id ?? "") === creatorId;
+      });
+
+      const evidence = ((evidenceResponse as { documents?: Array<Record<string, unknown>> }).documents ?? [])
+        .filter((evidenceDocument) => String(evidenceDocument.issue_id ?? "") === String(doc.$id ?? ""))
+        .map((evidenceDocument) => ({
+          fileId: String(evidenceDocument.$id ?? ""),
+          name: String(evidenceDocument.file_name ?? evidenceDocument.fileName ?? "Evidence"),
+          size: Number(evidenceDocument.size_bytes ?? evidenceDocument.fileSize ?? 0),
+          mimeType: String(evidenceDocument.type ?? "application/octet-stream"),
+          publicUrl: String(evidenceDocument.file_url ?? evidenceDocument.publicUrl ?? ""),
+          sanitized: Boolean(evidenceDocument.verified ?? false),
+        }));
+
       issue = {
-        $id: doc.$id,
-        title: doc.title,
-        slug: doc.slug,
-        description: doc.description,
-        category: doc.category,
-        state: doc.state,
-        district: doc.district,
-        landmark: doc.landmark ?? "Local area",
-        status: doc.status,
-        supporter_count: doc.supporter_count ?? doc.supportCount ?? 0,
-        evidence_count: doc.evidence_count ?? doc.evidenceCount ?? 0,
-        created_by: doc.created_by ?? doc.createdBy ?? "unknown",
-        creatorName: doc.creatorName ?? "Citizen Reporter",
-        language: doc.language ?? "en",
-        location: doc.location ?? [78.9629, 20.5937],
-        createdAt: doc.createdAt ?? doc.$createdAt ?? new Date().toISOString(),
-        evidence: doc.evidence ?? []
+        $id: String(doc.$id ?? ""),
+        title: String(doc.title ?? "Untitled issue"),
+        slug: String(doc.slug ?? slug),
+        description: String(doc.description ?? ""),
+        category: String(doc.category ?? "general"),
+        state: String(doc.state ?? ""),
+        district: String(doc.district ?? ""),
+        landmark: String(doc.landmark ?? "Local area"),
+        status: (doc.status as IssueRecord["status"]) ?? "pending_review",
+        supporter_count: Number(doc.supporter_count ?? doc.supportCount ?? 0),
+        evidence_count: Number(doc.evidence_count ?? doc.evidenceCount ?? evidence.length),
+        created_by: creatorId || "unknown",
+        creatorName: String(creatorRow?.display_name ?? creatorRow?.full_name ?? creatorRow?.username ?? "Citizen Reporter"),
+        creatorAvatar: String(creatorRow?.avatar_url ?? creatorRow?.imageUrl ?? ""),
+        language: String(doc.language ?? "en"),
+        location: (doc.location as [number, number]) ?? [78.9629, 20.5937],
+        createdAt: String(doc.created_at ?? doc.createdAt ?? doc.$createdAt ?? new Date().toISOString()),
+        evidence,
       };
     }
   } catch (err) {
-    console.warn("Appwrite lookup failed, using local mock data fallback:", err);
-  }
-
-  // 2. Fallback to mock data if Appwrite is unavailable or document not found
-  if (!issue) {
-    const mockMatch = mockIssues.find(i => i.slug === slug);
-    if (mockMatch) {
-      issue = mockMatch;
-    }
+    console.warn("Appwrite lookup failed:", err);
   }
 
   if (!issue) {
@@ -105,8 +119,17 @@ export default async function IssueDetailPage({ params }: { params: { slug: stri
   const evidence = issue.evidence ?? [];
   const supportCount = issue.supporter_count ?? 0;
   
-  // Filter comments for this issue
-  const comments = mockComments.filter(c => c.issue_id === issue?.$id && c.status === "approved");
+  const comments = ((commentsResponse as { documents?: Array<Record<string, unknown>> }).documents ?? [])
+    .filter((commentDocument) => String(commentDocument.issue_id ?? "") === issue.$id && String(commentDocument.status ?? "") === "approved")
+    .map((commentDocument) => ({
+      $id: String(commentDocument.$id ?? ""),
+      issue_id: String(commentDocument.issue_id ?? issue.$id),
+      user_name: String(commentDocument.user_name ?? "Citizen"),
+      avatar_url: String(commentDocument.avatar_url ?? ""),
+      content: String(commentDocument.content ?? ""),
+      status: "approved" as const,
+      createdAt: String(commentDocument.created_at ?? commentDocument.createdAt ?? commentDocument.$createdAt ?? new Date().toISOString()),
+    }));
 
   // Determine current timeline step index
   const currentStepIndex = statusSteps.findIndex(s => s.key === issue?.status);
@@ -161,7 +184,11 @@ export default async function IssueDetailPage({ params }: { params: { slug: stri
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-              <ShareButtons title={issue.title} slug={issue.slug} />
+              <ShareButtons 
+                title={issue.title} 
+                url={typeof window !== "undefined" ? window.location.href : `https://kranti.org.in/issues/${issue.slug}`}
+                description={`Support this civic issue: ${issue.title}`}
+              />
               <SupportButton slug={issue.slug} initialSupportCount={supportCount} />
             </div>
           </div>
@@ -320,7 +347,7 @@ export default async function IssueDetailPage({ params }: { params: { slug: stri
             {/* Comments Section */}
             <Card className="border-slate-900/10 bg-white/90 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
               <CardContent className="p-6 md:p-8">
-                <IssueComments issueId={issue.$id} initialComments={comments} />
+                <IssueComments issueSlug={issue.slug} issueId={issue.$id} initialComments={comments} />
               </CardContent>
             </Card>
 

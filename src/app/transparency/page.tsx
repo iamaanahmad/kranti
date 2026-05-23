@@ -16,10 +16,10 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockTransparencyStats } from "@/lib/mock-data";
+import { siteTransparencyStats } from "@/lib/site-content";
 
 export default function TransparencyPage() {
-  const stats = mockTransparencyStats;
+  const stats = siteTransparencyStats;
 
   const getActionColor = (action: string) => {
     switch (action) {

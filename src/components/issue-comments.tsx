@@ -3,15 +3,16 @@
 import { useState } from "react";
 import { MessageSquare, Send, ShieldAlert, CheckCircle2, User } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { IssueComment } from "@/lib/mock-data";
+import { IssueComment } from "@/lib/content-types";
 import { Button } from "@/components/ui/button";
 
 interface IssueCommentsProps {
+  issueSlug: string;
   issueId: string;
   initialComments: IssueComment[];
 }
 
-export default function IssueComments({ issueId, initialComments }: IssueCommentsProps) {
+export default function IssueComments({ issueSlug, issueId, initialComments }: IssueCommentsProps) {
   const { user, isLoaded } = useUser();
   const [comments, setComments] = useState<IssueComment[]>(initialComments);
   const [newCommentText, setNewCommentText] = useState("");
@@ -23,22 +24,35 @@ export default function IssueComments({ issueId, initialComments }: IssueComment
 
     setIsSubmitting(true);
 
-    // Simulate submission delay
-    setTimeout(() => {
-      const addedComment: IssueComment = {
-        $id: `comment_${Date.now()}`,
-        issue_id: issueId,
-        user_name: user?.fullName || user?.username || "Citizen User",
-        avatar_url: user?.imageUrl,
-        content: newCommentText,
-        status: "approved", // Automatically approved for premium mock experience
-        createdAt: new Date().toISOString()
-      };
+    fetch(`/api/issues/${issueSlug}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content: newCommentText }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data?.comment) {
+          throw new Error("Unable to post comment");
+        }
 
-      setComments([addedComment, ...comments]);
-      setNewCommentText("");
-      setIsSubmitting(false);
-    }, 600);
+        const addedComment: IssueComment = {
+          $id: String(data.comment.$id ?? `comment_${Date.now()}`),
+          issue_id: issueId,
+          user_name: String(data.comment.user_name ?? user?.fullName ?? user?.username ?? "Citizen User"),
+          avatar_url: data.comment.avatar_url ?? user?.imageUrl,
+          content: newCommentText,
+          status: "approved",
+          createdAt: String(data.comment.createdAt ?? new Date().toISOString()),
+        };
+
+        setComments([addedComment, ...comments]);
+        setNewCommentText("");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   return (

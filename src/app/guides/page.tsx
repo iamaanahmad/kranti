@@ -19,14 +19,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockGuides } from "@/lib/mock-data";
+import { siteGuides } from "@/lib/site-content";
 
 export default function GuidesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeGuideId, setActiveGuideId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const filteredGuides = mockGuides.filter(
+  const filteredGuides = siteGuides.filter(
     (guide) =>
       guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       guide.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MapPin, ArrowRight } from "lucide-react";
-import { IssueRecord } from "@/lib/mock-data";
+import { IssueRecord } from "@/lib/content-types";
 
 interface IssueMapProps {
   issues: IssueRecord[];

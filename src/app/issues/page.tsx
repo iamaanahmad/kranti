@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { mockIssues, IssueRecord } from "@/lib/mock-data";
+import { IssueRecord } from "@/lib/content-types";
 import IssueMap from "@/components/issue-map";
 
 const statesList = ["All States", "Maharashtra", "Karnataka", "Delhi"];
@@ -32,6 +32,7 @@ const categoriesList = ["All Categories", "roads", "water", "safety", "sanitatio
 const statusList = ["All Statuses", "open", "in_progress", "resolved", "pending_review"];
 
 export default function IssuesPage() {
+  const [issues, setIssues] = useState<IssueRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedState, setSelectedState] = useState("All States");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
@@ -40,9 +41,24 @@ export default function IssuesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [showFilters, setShowFilters] = useState(false);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/issues", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data) => {
+        setIssues(Array.isArray(data?.issues) ? data.issues : []);
+      })
+      .catch(() => {
+        setIssues([]);
+      });
+
+    return () => controller.abort();
+  }, []);
+
   // Filter & Sort logic
   const filteredIssues = useMemo(() => {
-    return mockIssues
+    return issues
       .filter((issue) => {
         const matchesSearch =
           issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -67,7 +83,7 @@ export default function IssuesPage() {
           return b.supporter_count - a.supporter_count;
         }
       });
-  }, [searchQuery, selectedState, selectedCategory, selectedStatus, sortBy]);
+  }, [issues, searchQuery, selectedState, selectedCategory, selectedStatus, sortBy]);
 
   const getStatusDetails = (status: string) => {
     switch (status) {
