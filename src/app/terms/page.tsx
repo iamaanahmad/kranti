@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     description: "Read the terms governing use of Kranti, India's civic action platform.",
     url: "https://kranti.org.in/terms",
   },
+  alternates: { canonical: "/terms" },
 };
 
 const sections = [

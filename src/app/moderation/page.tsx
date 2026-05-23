@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     description: "How Kranti moderates content to keep civic discourse safe, lawful, and evidence-based.",
     url: "https://kranti.org.in/moderation",
   },
+  alternates: { canonical: "/moderation" },
 };
 
 const allowedContent = [

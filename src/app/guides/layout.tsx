@@ -14,6 +14,9 @@ export const metadata: Metadata = {
     "RTI template",
     "consumer court India",
   ],
+  alternates: {
+    canonical: "/guides",
+  },
   openGraph: {
     title: "Citizen Guides — RTI, FIR, Consumer Rights | Kranti",
     description:

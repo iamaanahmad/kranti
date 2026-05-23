@@ -16,7 +16,7 @@ export function SiteFooter() {
               Evidence-based civic voice platform for lawful change in India.
             </p>
             <a
-              href="https://github.com/citindia/kranti"
+              href="https://github.com/Centre-for-Information-Technology-India/Kranti"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -71,7 +71,7 @@ export function SiteFooter() {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                <span>+91-11-XXXX-XXXX</span>
+                <span>+91-11-2456-0758</span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-500">
                 Acknowledged in 24h · Resolved in 15 days

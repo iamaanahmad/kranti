@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     description: "How Kranti collects, uses, and protects your personal data under Indian law.",
     url: "https://kranti.org.in/privacy",
   },
+  alternates: { canonical: "/privacy" },
 };
 
 const sections = [

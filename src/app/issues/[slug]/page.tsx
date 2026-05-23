@@ -31,6 +31,9 @@ import {
   listDocuments,
 } from "@/lib/appwrite";
 import { IssueRecord } from "@/lib/content-types";
+import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
+import { canonical, SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
 
 type IssueEvidence = {
   fileId: string;
@@ -55,8 +58,76 @@ const statusSteps = [
   { key: "resolved", label: "Resolved", desc: "Audited & closed." }
 ];
 
-export default async function IssueDetailPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+// Lightweight fetcher used by both generateMetadata and the page
+async function fetchIssueBySlug(slug: string): Promise<Record<string, unknown> | null> {
+  try {
+    const res = (await listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [
+      `equal("slug", ["${slug}"])`,
+      "limit(1)",
+    ])) as { documents?: Array<Record<string, unknown>> };
+    return res.documents?.[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const doc = await fetchIssueBySlug(slug);
+
+  if (!doc || doc.status === "pending_review") {
+    return {
+      title: "Issue not found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const title = String(doc.title ?? "Civic Issue");
+  const description = String(doc.description ?? "").slice(0, 160).trim() ||
+    `Civic issue raised on Kranti — ${title}. Support the case and demand action.`;
+  const state = String(doc.state ?? "");
+  const district = String(doc.district ?? "");
+  const category = String(doc.category ?? "civic");
+  const url = canonical(`/issues/${slug}`);
+
+  const locationLabel = [district, state].filter(Boolean).join(", ");
+  const seoTitle = locationLabel ? `${title} — ${locationLabel}` : title;
+
+  return {
+    title: seoTitle,
+    description,
+    alternates: { canonical: `/issues/${slug}` },
+    keywords: [
+      title,
+      `${category} issue`,
+      `civic problem ${state}`,
+      `${district} civic issue`,
+      "raise issue India",
+      "support civic action",
+    ].filter(Boolean),
+    openGraph: {
+      type: "article",
+      url,
+      title: seoTitle,
+      description,
+      siteName: "Kranti",
+      locale: "en_IN",
+      publishedTime: String(doc.created_at ?? doc.$createdAt ?? ""),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seoTitle,
+      description,
+    },
+  };
+}
+
+export default async function IssueDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   let issue: IssueRecord | null = null;
   let commentsResponse: unknown = { documents: [] };
 
@@ -135,8 +206,57 @@ export default async function IssueDetailPage({ params }: { params: { slug: stri
   const currentStepIndex = statusSteps.findIndex(s => s.key === issue?.status);
   const activeStep = currentStepIndex !== -1 ? currentStepIndex : 0;
 
+  // ── JSON-LD: Article + Breadcrumb for SEO ─────────────────────────────────
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: issue!.title,
+    description: (issue!.description || "").slice(0, 300),
+    url: `${SITE_URL}/issues/${issue!.slug}`,
+    datePublished: issue!.createdAt,
+    dateModified: issue!.createdAt,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/issues/${issue!.slug}`,
+    },
+    author: {
+      "@type": "Person",
+      name: issue!.creatorName || "Citizen Reporter",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Kranti",
+      logo: { "@type": "ImageObject", url: `${SITE_URL}/kranti.png` },
+    },
+    articleSection: issue!.category,
+    inLanguage: issue!.language === "hi" ? "hi-IN" : "en-IN",
+    contentLocation: {
+      "@type": "Place",
+      name: [issue!.district, issue!.state].filter(Boolean).join(", "),
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: issue!.district,
+        addressRegion: issue!.state,
+        addressCountry: "IN",
+      },
+    },
+    interactionStatistic: {
+      "@type": "InteractionCounter",
+      interactionType: "https://schema.org/LikeAction",
+      userInteractionCount: supportCount,
+    },
+  };
+
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Issues", path: "/issues" },
+    { name: issue!.title.slice(0, 60), path: `/issues/${issue!.slug}` },
+  ]);
+
   return (
     <div className="relative min-h-screen bg-[#f4f1ea] px-6 py-12 text-slate-950 dark:bg-slate-950 dark:text-slate-50 lg:px-8">
+      <JsonLd data={articleSchema} />
+      <JsonLd data={breadcrumbSchema} />
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/4 top-10 h-[500px] w-[500px] rounded-full bg-rose-100/20 blur-3xl dark:bg-rose-900/5" />
