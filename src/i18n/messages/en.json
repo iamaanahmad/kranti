@@ -5,8 +5,12 @@
     "issues": "Issues",
     "petitions": "Petitions",
     "campaigns": "Campaigns",
+    "reports": "Reports",
     "guides": "Guides",
+    "guidelines": "Guidelines",
+    "transparency": "Transparency",
     "create": "Create",
+    "raiseVoice": "Raise Voice",
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "dashboard": "Dashboard",
@@ -26,37 +30,95 @@
     "delete": "Delete",
     "edit": "Edit",
     "view": "View",
+    "viewAll": "View All",
     "share": "Share",
     "support": "Support",
     "sign": "Sign",
-    "volunteer": "Volunteer"
+    "volunteer": "Volunteer",
+    "learnMore": "Learn More",
+    "readMore": "Read More",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "sortBy": "Sort By",
+    "filterBy": "Filter By",
+    "all": "All",
+    "active": "Active",
+    "completed": "Completed",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
   },
   "home": {
     "hero": {
       "title": "Raise your voice for change",
       "subtitle": "A responsible civic action platform for lawful change in India",
-      "cta": "Start Now"
+      "description": "Evidence-based civic participation with transparency, strong moderation, and clear pathways to real-world action.",
+      "cta": "Start Now",
+      "ctaSecondary": "Learn How It Works"
     },
     "stats": {
       "issuesRaised": "Issues Raised",
       "signatures": "Signatures",
-      "resolutions": "Resolutions"
+      "resolutions": "Resolutions",
+      "activeCampaigns": "Active Campaigns"
+    },
+    "trending": {
+      "title": "Trending Now",
+      "subtitle": "Most supported issues and petitions"
+    },
+    "categories": {
+      "title": "Browse by Category",
+      "subtitle": "Find issues that matter to you"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Simple steps to make your voice heard",
+      "step1": {
+        "title": "Raise an Issue",
+        "description": "Document problems with evidence"
+      },
+      "step2": {
+        "title": "Gather Support",
+        "description": "Build community backing"
+      },
+      "step3": {
+        "title": "Take Action",
+        "description": "Escalate through lawful channels"
+      },
+      "step4": {
+        "title": "Track Progress",
+        "description": "Monitor resolution status"
+      }
+    },
+    "featured": {
+      "title": "Featured Campaigns",
+      "subtitle": "Join movements making real impact"
     }
   },
   "issues": {
     "title": "Browse Issues",
     "subtitle": "Local problems reported by citizens across India",
     "create": "Raise an Issue",
+    "createNew": "Raise New Issue",
     "support": "Support this issue",
     "supported": "Supported",
+    "unsupport": "Remove Support",
     "supporters": "supporters",
+    "noSupporters": "No supporters yet",
+    "beFirst": "Be the first to support",
+    "viewMap": "View on Map",
+    "viewGrid": "View as Grid",
+    "noIssues": "No issues found",
+    "noIssuesDescription": "Be the first to raise an issue in this category",
     "status": {
       "pending_review": "Pending Review",
       "open": "Open",
       "in_progress": "In Progress",
-      "resolved": "Resolved"
+      "resolved": "Resolved",
+      "escalated": "Escalated"
     },
     "categories": {
+      "all": "All Categories",
       "infrastructure": "Infrastructure",
       "sanitation": "Sanitation",
       "water": "Water Supply",
@@ -66,57 +128,429 @@
       "education": "Education",
       "environment": "Environment",
       "safety": "Safety",
+      "corruption": "Corruption",
       "other": "Other"
+    },
+    "filters": {
+      "state": "State",
+      "district": "District",
+      "category": "Category",
+      "status": "Status",
+      "sortBy": "Sort By",
+      "newest": "Newest First",
+      "oldest": "Oldest First",
+      "mostSupported": "Most Supported",
+      "trending": "Trending"
+    },
+    "detail": {
+      "evidence": "Evidence",
+      "location": "Location",
+      "category": "Category",
+      "status": "Status",
+      "createdBy": "Created By",
+      "createdOn": "Created On",
+      "lastUpdated": "Last Updated",
+      "timeline": "Timeline",
+      "updates": "Updates",
+      "comments": "Comments",
+      "addComment": "Add a comment",
+      "postComment": "Post Comment",
+      "noComments": "No comments yet",
+      "noEvidence": "No evidence uploaded",
+      "shareIssue": "Share this issue",
+      "reportIssue": "Report inappropriate content",
+      "relatedIssues": "Related Issues"
     }
   },
   "petitions": {
     "title": "Browse Petitions",
     "subtitle": "Demand specific action from authorities",
     "create": "Start a Petition",
+    "createNew": "Start New Petition",
     "sign": "Sign this petition",
     "signed": "Signed",
+    "unsign": "Remove Signature",
     "signatures": "signatures",
+    "signatureCount": "{count} signatures",
     "goal": "Goal",
+    "goalProgress": "{current} of {goal} signatures",
     "targetAuthority": "Target Authority",
-    "demand": "Demand"
+    "demand": "Demand",
+    "noPetitions": "No petitions found",
+    "noPetitionsDescription": "Be the first to start a petition",
+    "featured": "Featured Petitions",
+    "status": {
+      "pending_review": "Pending Review",
+      "open": "Open",
+      "in_progress": "In Progress",
+      "successful": "Successful",
+      "resolved": "Resolved"
+    },
+    "detail": {
+      "signPetition": "Sign this petition",
+      "sharePetition": "Share this petition",
+      "petitionClosed": "This petition is closed",
+      "goalReached": "Goal reached!",
+      "almostThere": "Almost there!",
+      "recentSignatures": "Recent Signatures",
+      "updates": "Petition Updates",
+      "noUpdates": "No updates yet"
+    }
   },
   "campaigns": {
     "title": "Browse Campaigns",
     "subtitle": "Collective pressure for real action",
     "create": "Launch a Campaign",
+    "createNew": "Launch New Campaign",
     "volunteer": "Volunteer",
+    "volunteered": "Volunteered",
     "volunteers": "volunteers",
-    "goals": "Campaign Goals"
+    "volunteerCount": "{count} volunteers",
+    "goals": "Campaign Goals",
+    "noCampaigns": "No campaigns found",
+    "noCampaignsDescription": "Be the first to launch a campaign",
+    "featured": "Featured Campaigns",
+    "active": "Active Campaigns",
+    "completed": "Completed Campaigns",
+    "status": {
+      "pending_review": "Pending Review",
+      "active": "Active",
+      "completed": "Completed",
+      "paused": "Paused"
+    },
+    "detail": {
+      "joinCampaign": "Join this campaign",
+      "shareCampaign": "Share this campaign",
+      "campaignGoals": "Campaign Goals",
+      "timeline": "Campaign Timeline",
+      "milestones": "Milestones",
+      "updates": "Campaign Updates",
+      "noUpdates": "No updates yet",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "duration": "Duration"
+    }
+  },
+  "reports": {
+    "title": "Report Incident",
+    "subtitle": "Document hate speech, violence, or discrimination",
+    "create": "File a Report",
+    "createNew": "File New Report",
+    "warning": "Safety Warning",
+    "warningMessage": "Reports are reviewed by moderators. Evidence is mandatory. False reports may result in account suspension.",
+    "evidenceRequired": "Evidence is mandatory for all reports",
+    "incidentTypes": {
+      "communal_hate": "Communal Hate",
+      "caste_discrimination": "Caste Discrimination",
+      "gender_violence": "Gender-based Violence",
+      "mob_violence": "Mob Violence",
+      "hate_speech": "Hate Speech",
+      "targeted_harassment": "Targeted Harassment",
+      "religious_persecution": "Religious Persecution"
+    },
+    "status": {
+      "pending_review": "Pending Review",
+      "under_investigation": "Under Investigation",
+      "verified": "Verified",
+      "resolved": "Resolved"
+    }
+  },
+  "create": {
+    "title": "What would you like to create?",
+    "subtitle": "Choose the type of content you want to create",
+    "selectType": "Select a type to continue",
+    "types": {
+      "issue": {
+        "title": "Issue",
+        "description": "Report local problems like broken roads, water shortage, or civic issues",
+        "examples": "Examples: Broken streetlight, garbage not collected, pothole on main road"
+      },
+      "petition": {
+        "title": "Petition",
+        "description": "Demand specific action from authorities with community signatures",
+        "examples": "Examples: Install CCTV cameras, improve school facilities, fix water supply"
+      },
+      "report": {
+        "title": "Report",
+        "description": "Document hate speech, violence, or discrimination incidents (evidence required)",
+        "examples": "Examples: Communal hate, caste discrimination, gender violence",
+        "warning": "Requires evidence and moderation review"
+      },
+      "campaign": {
+        "title": "Campaign",
+        "description": "Launch broader movements for systemic change with volunteer support",
+        "examples": "Examples: Clean river campaign, road safety awareness, education reform"
+      }
+    }
   },
   "dashboard": {
+    "title": "Dashboard",
     "welcome": "Welcome back",
+    "welcomeMessage": "Here's what's happening with your content",
+    "myContent": "My Content",
     "myIssues": "My Raised Issues",
-    "supported": "Backed Petitions",
+    "myPetitions": "My Petitions",
+    "myCampaigns": "My Campaigns",
+    "myReports": "My Reports",
+    "activity": "Activity",
+    "supported": "Supported Issues",
+    "signed": "Signed Petitions",
+    "volunteered": "Volunteered Campaigns",
     "notifications": "Notifications",
-    "noIssues": "You have not submitted any issues yet",
-    "noSupported": "You have not backed any petitions yet",
-    "noNotifications": "No notifications yet"
+    "recentActivity": "Recent Activity",
+    "stats": {
+      "issuesRaised": "Issues Raised",
+      "petitionsStarted": "Petitions Started",
+      "campaignsLaunched": "Campaigns Launched",
+      "totalSupport": "Total Support Received"
+    },
+    "empty": {
+      "noIssues": "You have not raised any issues yet",
+      "noIssuesAction": "Raise your first issue",
+      "noPetitions": "You have not started any petitions yet",
+      "noPetitionsAction": "Start your first petition",
+      "noCampaigns": "You have not launched any campaigns yet",
+      "noCampaignsAction": "Launch your first campaign",
+      "noSupported": "You have not supported any issues yet",
+      "noSupportedAction": "Browse issues",
+      "noSigned": "You have not signed any petitions yet",
+      "noSignedAction": "Browse petitions",
+      "noNotifications": "No notifications yet",
+      "noActivity": "No recent activity"
+    }
   },
   "forms": {
     "title": "Title",
+    "titlePlaceholder": "Enter a clear, descriptive title",
     "description": "Description",
+    "descriptionPlaceholder": "Provide detailed information",
+    "demand": "Demand",
+    "demandPlaceholder": "What specific action do you want?",
+    "targetAuthority": "Target Authority",
+    "targetAuthorityPlaceholder": "Who should take action?",
+    "goals": "Goals",
+    "goalsPlaceholder": "What are the campaign objectives?",
     "category": "Category",
     "state": "State",
     "district": "District",
     "landmark": "Landmark",
+    "landmarkPlaceholder": "Nearby landmark or location details",
     "language": "Language",
     "evidence": "Evidence",
+    "evidenceHelp": "Upload photos, videos, or documents",
+    "uploadEvidence": "Upload Evidence",
+    "incidentType": "Incident Type",
+    "incidentDate": "Incident Date",
+    "signatureGoal": "Signature Goal",
+    "signatureGoalPlaceholder": "How many signatures do you need?",
+    "startDate": "Start Date",
+    "endDate": "End Date",
     "required": "Required",
     "optional": "Optional",
     "selectState": "Select state",
-    "selectCategory": "Select category"
+    "selectDistrict": "Select district",
+    "selectCategory": "Select category",
+    "selectIncidentType": "Select incident type",
+    "selectLanguage": "Select language",
+    "validation": {
+      "titleRequired": "Title is required",
+      "titleTooShort": "Title must be at least 10 characters",
+      "titleTooLong": "Title must be less than 200 characters",
+      "descriptionRequired": "Description is required",
+      "descriptionTooShort": "Description must be at least 50 characters",
+      "categoryRequired": "Category is required",
+      "stateRequired": "State is required",
+      "districtRequired": "District is required",
+      "evidenceRequired": "At least one evidence file is required",
+      "demandRequired": "Demand is required",
+      "targetAuthorityRequired": "Target authority is required",
+      "goalsRequired": "Campaign goals are required",
+      "incidentTypeRequired": "Incident type is required",
+      "incidentDateRequired": "Incident date is required"
+    }
   },
   "notifications": {
-    "statusChange": "Status Updated",
-    "newComment": "New Comment",
-    "newSupport": "New Support",
-    "newSignature": "New Signature",
-    "moderation": "Moderation Update",
-    "markAllRead": "Mark all as read"
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "deleteAll": "Delete all",
+    "noNotifications": "No notifications yet",
+    "types": {
+      "status_change": "Status Updated",
+      "comment": "New Comment",
+      "support": "New Support",
+      "signature": "New Signature",
+      "moderation": "Moderation Update",
+      "system": "System Notification"
+    },
+    "messages": {
+      "issueSupported": "Someone supported your issue",
+      "petitionSigned": "Someone signed your petition",
+      "commentAdded": "New comment on your content",
+      "statusChanged": "Status updated to {status}",
+      "contentApproved": "Your content has been approved",
+      "contentRejected": "Your content needs revision"
+    }
+  },
+  "about": {
+    "title": "About Kranti",
+    "subtitle": "A responsible civic action platform for lawful change in India",
+    "mission": {
+      "title": "Our Mission",
+      "description": "Kranti empowers citizens to raise public issues, launch petitions, organize peaceful campaigns, document evidence, gather support, and pursue lawful escalation."
+    },
+    "vision": {
+      "title": "Our Vision",
+      "description": "Evidence-based civic participation with transparency, strong moderation, and clear pathways to real-world action."
+    },
+    "principles": {
+      "title": "Our Principles",
+      "transparency": "Transparency",
+      "transparencyDesc": "Open moderation and clear policies",
+      "evidence": "Evidence-based",
+      "evidenceDesc": "Facts over rumors",
+      "lawful": "Lawful Action",
+      "lawfulDesc": "Constitutional and peaceful methods",
+      "inclusive": "Inclusive",
+      "inclusiveDesc": "Voice for all citizens"
+    },
+    "openSource": {
+      "title": "Open Source",
+      "description": "Kranti is open source software. View our code, contribute, or deploy your own instance.",
+      "viewCode": "View on GitHub"
+    }
+  },
+  "guides": {
+    "title": "Guides & Resources",
+    "subtitle": "Learn how to take effective civic action",
+    "categories": {
+      "legal": "Legal Rights",
+      "howTo": "How-to Guides",
+      "resources": "Resources",
+      "tips": "Tips & Best Practices"
+    },
+    "topics": {
+      "rti": {
+        "title": "How to File RTI",
+        "description": "Step-by-step guide to filing Right to Information requests"
+      },
+      "fir": {
+        "title": "Filing an FIR",
+        "description": "Know your rights and the process"
+      },
+      "consumer": {
+        "title": "Consumer Complaints",
+        "description": "How to file consumer court complaints"
+      },
+      "evidence": {
+        "title": "Collecting Evidence",
+        "description": "Best practices for documenting issues"
+      },
+      "escalation": {
+        "title": "Escalation Pathways",
+        "description": "When and how to escalate issues"
+      }
+    }
+  },
+  "guidelines": {
+    "title": "Community Guidelines",
+    "subtitle": "Rules for responsible civic participation",
+    "sections": {
+      "allowed": {
+        "title": "What's Allowed",
+        "items": [
+          "Evidence-based reporting of civic issues",
+          "Peaceful demands for lawful action",
+          "Constructive criticism of policies",
+          "Organizing peaceful campaigns"
+        ]
+      },
+      "notAllowed": {
+        "title": "What's Not Allowed",
+        "items": [
+          "Hate speech or communal incitement",
+          "Doxxing or sharing private information",
+          "False accusations without evidence",
+          "Calls for violence or illegal action",
+          "Spam or commercial promotion"
+        ]
+      },
+      "moderation": {
+        "title": "Moderation Policy",
+        "description": "All content is reviewed by human moderators. AI assists with flagging but humans make final decisions."
+      }
+    }
+  },
+  "transparency": {
+    "title": "Transparency",
+    "subtitle": "How we operate and moderate content",
+    "sections": {
+      "moderation": {
+        "title": "Moderation Statistics",
+        "contentReviewed": "Content Reviewed",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "avgResponseTime": "Average Response Time"
+      },
+      "reports": {
+        "title": "Transparency Reports",
+        "description": "Quarterly reports on content moderation and government requests"
+      },
+      "funding": {
+        "title": "Funding",
+        "description": "How Kranti is funded and sustained"
+      },
+      "policies": {
+        "title": "Policies",
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "moderation": "Moderation Policy"
+      }
+    }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "moderationQueue": "Moderation Queue",
+    "pendingReview": "Pending Review",
+    "approve": "Approve",
+    "reject": "Reject",
+    "ban": "Ban User",
+    "analytics": "Analytics",
+    "users": "User Management",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "footer": {
+    "tagline": "People first civic action",
+    "sections": {
+      "platform": "Platform",
+      "legal": "Legal",
+      "community": "Community",
+      "connect": "Connect"
+    },
+    "links": {
+      "about": "About",
+      "guides": "Guides",
+      "guidelines": "Guidelines",
+      "transparency": "Transparency",
+      "terms": "Terms of Service",
+      "privacy": "Privacy Policy",
+      "moderation": "Moderation Policy",
+      "contact": "Contact",
+      "github": "GitHub"
+    },
+    "developedBy": "Developed & Maintained by",
+    "organization": "Centre for Information Technology India",
+    "copyright": "© {year} Kranti. All rights reserved.",
+    "license": "Open source under AGPLv3"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "notFound": "Page not found",
+    "unauthorized": "You must be signed in",
+    "forbidden": "You don't have permission",
+    "serverError": "Server error occurred",
+    "tryAgain": "Please try again",
+    "goHome": "Go to Home"
   }
 }
