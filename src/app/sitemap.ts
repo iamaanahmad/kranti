@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
 import { siteGuides } from "@/lib/site-content";
+import { isPublicCampaignStatus } from "@/lib/campaign-visibility";
 import {
   appwriteDatabaseId,
   appwriteIssuesCollectionId,
@@ -20,7 +21,8 @@ interface DocWithSlug {
 }
 
 async function fetchPublicSlugs(
-  collectionId: string
+  collectionId: string,
+  campaignOnly = false
 ): Promise<Array<{ slug: string; lastModified: string }>> {
   try {
     const res = (await listDocuments(appwriteDatabaseId, collectionId, [
@@ -28,7 +30,7 @@ async function fetchPublicSlugs(
     ])) as { documents?: DocWithSlug[] };
 
     return (res.documents || [])
-      .filter((d) => d.slug && d.status !== "pending_review")
+      .filter((d) => d.slug && (campaignOnly ? isPublicCampaignStatus(d.status) : d.status !== "pending_review"))
       .map((d) => ({
         slug: d.slug as string,
         lastModified: d.$updatedAt || new Date().toISOString(),
@@ -71,7 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [issues, petitions, campaigns] = await Promise.all([
     fetchPublicSlugs(appwriteIssuesCollectionId),
     fetchPublicSlugs(appwritePetitionsCollectionId),
-    fetchPublicSlugs(appwriteCampaignsCollectionId),
+    fetchPublicSlugs(appwriteCampaignsCollectionId, true),
   ]);
 
   const issueRoutes: MetadataRoute.Sitemap = issues.map((d) => ({
