@@ -7,7 +7,7 @@ import {
   Query,
 } from "@/lib/appwrite";
 import { canonical, SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
-import { isPublicCampaignStatus } from "@/lib/campaign-visibility";
+import { isIndexableCampaignStatus, isPublicCampaignStatus } from "@/lib/campaign-visibility";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -45,6 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: seoTitle,
     description,
+    robots: { index: isIndexableCampaignStatus(doc.status), follow: true },
     alternates: { canonical: `/campaigns/${slug}` },
     keywords: [
       title,
