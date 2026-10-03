@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
 import { siteGuides } from "@/lib/site-content";
-import { isPublicCampaignStatus } from "@/lib/campaign-visibility";
+import { isIndexableCampaignStatus } from "@/lib/campaign-visibility";
 import {
   appwriteDatabaseId,
   appwriteIssuesCollectionId,
@@ -30,7 +30,7 @@ async function fetchPublicSlugs(
     ])) as { documents?: DocWithSlug[] };
 
     return (res.documents || [])
-      .filter((d) => d.slug && (campaignOnly ? isPublicCampaignStatus(d.status) : d.status !== "pending_review"))
+      .filter((d) => d.slug && (campaignOnly ? isIndexableCampaignStatus(d.status) : d.status !== "pending_review"))
       .map((d) => ({
         slug: d.slug as string,
         lastModified: d.$updatedAt || new Date().toISOString(),
