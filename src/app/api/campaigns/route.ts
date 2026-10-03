@@ -9,6 +9,7 @@ import {
   listDocuments,
 } from "@/lib/appwrite";
 import { campaignFormSchema } from "@/lib/campaign-form";
+import { isPublicCampaignStatus } from "@/lib/campaign-visibility";
 
 function generateSlug(title: string): string {
   return title
@@ -93,11 +94,12 @@ export async function GET(request: NextRequest) {
       queries.push(`equal("state", ["${state}"])`);
     }
 
-    if (status) {
-      queries.push(`equal("status", ["${status}"])`);
-    } else {
-      queries.push(`notEqual("status", ["pending_review"])`);
+    if (status && !isPublicCampaignStatus(status)) {
+      return NextResponse.json({ campaigns: [] });
     }
+    queries.push(status
+      ? JSON.stringify({ method: "equal", attribute: "status", values: [status] })
+      : JSON.stringify({ method: "equal", attribute: "status", values: ["active", "completed", "paused"] }));
 
     if (featured === "true") {
       queries.push(`equal("featured", [true])`);
@@ -108,25 +110,27 @@ export async function GET(request: NextRequest) {
 
     const response = await listDocuments(appwriteDatabaseId, appwriteCampaignsCollectionId, queries);
 
-    const campaigns = ((response as { documents?: Array<Record<string, unknown>> }).documents ?? []).map((doc: Record<string, unknown>) => ({
-      $id: doc.$id,
-      title: doc.title,
-      slug: doc.slug,
-      description: doc.description,
-      goals: doc.goals,
-      category: doc.category,
-      state: doc.state,
-      status: doc.status,
-      volunteer_count: doc.volunteer_count,
-      featured: doc.featured,
-      created_by: doc.created_by,
-      creatorName: doc.creator_name,
-      creatorAvatar: doc.creator_avatar,
-      language: doc.language,
-      start_date: doc.start_date,
-      end_date: doc.end_date,
-      createdAt: doc.created_at,
-    }));
+    const campaigns = ((response as { documents?: Array<Record<string, unknown>> }).documents ?? [])
+      .filter((doc) => isPublicCampaignStatus(doc.status))
+      .map((doc: Record<string, unknown>) => ({
+        $id: doc.$id,
+        title: doc.title,
+        slug: doc.slug,
+        description: doc.description,
+        goals: doc.goals,
+        category: doc.category,
+        state: doc.state,
+        status: doc.status,
+        volunteer_count: doc.volunteer_count,
+        featured: doc.featured,
+        created_by: doc.created_by,
+        creatorName: doc.creator_name,
+        creatorAvatar: doc.creator_avatar,
+        language: doc.language,
+        start_date: doc.start_date,
+        end_date: doc.end_date,
+        createdAt: doc.created_at,
+      }));
 
     return NextResponse.json({ campaigns });
   } catch (error) {

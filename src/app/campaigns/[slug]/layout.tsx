@@ -6,6 +6,7 @@ import {
   listDocuments,
 } from "@/lib/appwrite";
 import { canonical, SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
+import { isIndexableCampaignStatus, isPublicCampaignStatus } from "@/lib/campaign-visibility";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const doc = await fetchCampaignBySlug(slug);
 
-  if (!doc || doc.status === "pending_review") {
+  if (!doc || !isPublicCampaignStatus(doc.status)) {
     return { title: "Campaign not found", robots: { index: false, follow: false } };
   }
 
@@ -43,6 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: seoTitle,
     description,
+    robots: { index: isIndexableCampaignStatus(doc.status), follow: true },
     alternates: { canonical: `/campaigns/${slug}` },
     keywords: [
       title,
@@ -73,7 +75,7 @@ export default async function CampaignDetailLayout({ params, children }: Props) 
   const { slug } = await params;
   const doc = await fetchCampaignBySlug(slug);
 
-  if (!doc) return <>{children}</>;
+  if (!doc || !isPublicCampaignStatus(doc.status)) return <>{children}</>;
 
   const title = String(doc.title ?? "Campaign");
   const description = String(doc.description ?? "").slice(0, 300);
