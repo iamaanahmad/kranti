@@ -34,7 +34,7 @@ export default function DonatePage() {
             </ul>
             <div className="p-5 bg-white/60 dark:bg-white/5 rounded-xl border border-slate-900/5 dark:border-white/10 mt-8">
               <p className="text-base">
-                We document our funding and operations on our <Link href="/transparency" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Transparency page</Link>.
+                Funding and expense reports are not available yet. See our <Link href="/transparency" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Transparency page</Link> for current platform information.
               </p>
             </div>
           </div>
