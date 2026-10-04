@@ -16,19 +16,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { VolunteerCard } from "@/components/volunteer-card";
 import { DonationCard } from "@/components/donation-card";
 
-type TransparencyAction = {
-  id: string;
-  action: string;
-  target: string;
-  reason: string;
-  timestamp: string;
-};
-
 type TransparencyData = {
   available: boolean;
   totalIssues: number;
   resolvedIssues: number;
-  recentActions: TransparencyAction[];
 };
 
 export default function TransparencyPage() {
@@ -55,17 +46,6 @@ export default function TransparencyPage() {
 
   const countValue = (value: number | null) =>
     value === null ? (unavailable ? "Unavailable" : "…") : String(value);
-
-  const getActionColor = (action: string) => {
-    switch (action) {
-      case "REJECT":
-        return "text-rose-700 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900";
-      case "RESTRICT":
-        return "text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900";
-      default:
-        return "text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-900";
-    }
-  };
 
   return (
     <div className="relative min-h-screen bg-[#f4f1ea] px-6 py-12 text-slate-950 dark:bg-slate-950 dark:text-slate-50 lg:px-8">
@@ -162,46 +142,15 @@ export default function TransparencyPage() {
               <CardTitle className="text-xl">Public Moderation Audit Log</CardTitle>
             </div>
             <CardDescription>
-              Recent moderation actions recorded by platform administrators. Only actions stored in the platform log are shown.
+              Moderation records stay private until a safe public record is ready.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {!data && !unavailable && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">Loading moderation log…</p>
-            )}
-            {(unavailable || (data && data.recentActions.length === 0)) && (
-              <div className="rounded-2xl border border-dashed border-slate-900/15 bg-slate-50/60 p-6 text-center dark:border-white/10 dark:bg-slate-950/40">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {unavailable
-                    ? "The moderation log is temporarily unavailable."
-                    : "No public moderation actions recorded yet."}
-                </p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Actions appear here once administrators take them on the platform.
-                </p>
-              </div>
-            )}
-            {data?.recentActions.map((log) => (
-              <div 
-                key={log.id} 
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-900/5 bg-slate-50 dark:border-white/5 dark:bg-slate-950/30"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge className={`border uppercase text-[10px] px-2 py-0.5 rounded-full ${getActionColor(log.action)}`}>
-                      {log.action}
-                    </Badge>
-                    <span className="font-semibold text-sm text-slate-900 dark:text-white">{log.target}</span>
-                  </div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {log.reason}
-                  </p>
-                </div>
-                <div className="text-xs text-slate-500 shrink-0">
-                  {new Date(log.timestamp).toLocaleString()}
-                </div>
-              </div>
-            ))}
+          <CardContent>
+            <div className="rounded-2xl border border-dashed border-slate-900/15 bg-slate-50/60 p-6 text-center dark:border-white/10 dark:bg-slate-950/40">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Public moderation records are not available yet.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
