@@ -32,7 +32,11 @@ export async function GET() {
       totalIssues: Number(allIssues.total ?? 0),
       resolvedIssues: Number(resolvedIssues.total ?? 0),
     });
-  } catch {
+  } catch (error) {
+    console.error(
+      "Transparency aggregate query failed:",
+      error instanceof Error ? error.name : "UnknownError",
+    );
     return NextResponse.json({ available: false });
   }
 }
