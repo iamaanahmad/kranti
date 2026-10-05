@@ -74,6 +74,7 @@ export async function POST(request: Request) {
   // Update issue status
   await updateDocument(appwriteDatabaseId, appwriteIssuesCollectionId, issueId, {
     status: newStatus,
+    ...(action === "approve" ? { visibility: "public" } : {}),
   });
 
   // Write moderation log (action enum: flag/hide/delete/ban/restore/escalate/approve/reject)

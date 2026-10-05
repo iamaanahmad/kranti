@@ -18,13 +18,13 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { isPublicIssue } from "@/lib/issue-visibility";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SupportButton } from "@/components/support-button";
 import IssueComments from "@/components/issue-comments";
 import { ShareButtons } from "@/components/share-buttons";
 import {
   appwriteDatabaseId,
-  appwriteEvidenceCollectionId,
   appwriteCommentsCollectionId,
   appwriteUsersCollectionId,
   appwriteIssuesCollectionId,
@@ -79,7 +79,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const doc = await fetchIssueBySlug(slug);
 
-  if (!doc || doc.status === "pending_review") {
+  if (!doc || !isPublicIssue(doc)) {
     return {
       title: "Issue not found",
       robots: { index: false, follow: false },
@@ -132,31 +132,22 @@ export default async function IssueDetailPage({ params }: { params: Promise<{ sl
   let commentsResponse: unknown = { documents: [] };
 
   try {
-    const [issueResponse, evidenceResponse, usersResponse, commentsData] = await Promise.all([
+    const [issueResponse, usersResponse, commentsData] = await Promise.all([
       listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [`equal("slug", ["${slug}"])`, "limit(1)"]),
-      listDocuments(appwriteDatabaseId, appwriteEvidenceCollectionId, []),
       listDocuments(appwriteDatabaseId, appwriteUsersCollectionId, []),
       listDocuments(appwriteDatabaseId, appwriteCommentsCollectionId, []),
     ]);
     commentsResponse = commentsData;
 
     const doc = (issueResponse as { documents?: Array<Record<string, unknown>> }).documents?.[0];
-    if (doc) {
+    if (doc && isPublicIssue(doc)) {
       const creatorId = String(doc.created_by ?? doc.createdBy ?? "");
       const creatorRow = ((usersResponse as { documents?: Array<Record<string, unknown>> }).documents ?? []).find((userDocument) => {
         return String(userDocument.clerk_id ?? userDocument.clerkUserId ?? userDocument.$id ?? "") === creatorId;
       });
 
-      const evidence = ((evidenceResponse as { documents?: Array<Record<string, unknown>> }).documents ?? [])
-        .filter((evidenceDocument) => String(evidenceDocument.issue_id ?? "") === String(doc.$id ?? ""))
-        .map((evidenceDocument) => ({
-          fileId: String(evidenceDocument.$id ?? ""),
-          name: String(evidenceDocument.file_name ?? evidenceDocument.fileName ?? "Evidence"),
-          size: Number(evidenceDocument.size_bytes ?? evidenceDocument.fileSize ?? 0),
-          mimeType: String(evidenceDocument.type ?? "application/octet-stream"),
-          publicUrl: String(evidenceDocument.file_url ?? evidenceDocument.publicUrl ?? ""),
-          sanitized: Boolean(evidenceDocument.verified ?? false),
-        }));
+      // Case approval does not publish attachments. Evidence needs its own review.
+      const evidence: NonNullable<IssueRecord["evidence"]> = [];
 
       issue = {
         $id: String(doc.$id ?? ""),
@@ -169,7 +160,7 @@ export default async function IssueDetailPage({ params }: { params: Promise<{ sl
         landmark: String(doc.landmark ?? "Local area"),
         status: (doc.status as IssueRecord["status"]) ?? "pending_review",
         supporter_count: Number(doc.supporter_count ?? doc.supportCount ?? 0),
-        evidence_count: Number(doc.evidence_count ?? doc.evidenceCount ?? evidence.length),
+        evidence_count: 0,
         created_by: creatorId || "unknown",
         creatorName: String(creatorRow?.display_name ?? creatorRow?.full_name ?? creatorRow?.username ?? "Citizen Reporter"),
         creatorAvatar: String(creatorRow?.avatar_url ?? creatorRow?.imageUrl ?? ""),
@@ -415,7 +406,7 @@ export default async function IssueDetailPage({ params }: { params: Promise<{ sl
                   <CardTitle className="text-xl">Lawful Civic Escalation Pathways</CardTitle>
                 </div>
                 <CardDescription>
-                  Under India's civic governance framework, citizens can pursue these actionable pathways for immediate resolution.
+                  Under India&apos;s civic governance framework, citizens can pursue these actionable pathways for immediate resolution.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -539,7 +530,7 @@ export default async function IssueDetailPage({ params }: { params: Promise<{ sl
                   })
                 ) : (
                   <div className="rounded-2xl border border-dashed border-slate-900/10 bg-slate-50 p-8 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-slate-950/20">
-                    No evidence has been attached.
+                    Evidence is not available on this public page.
                   </div>
                 )}
               </CardContent>

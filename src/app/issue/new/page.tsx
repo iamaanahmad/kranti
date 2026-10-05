@@ -108,9 +108,7 @@ export default function NewIssuePage() {
       if (evidenceInputRef.current) {
         evidenceInputRef.current.value = "";
       }
-      if (body.issueSlug) {
-        router.push(`/issues/${body.issueSlug}`);
-      }
+      router.push("/dashboard");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to save the issue draft.");
     } finally {

@@ -304,11 +304,15 @@ export default function DashboardPage() {
                               </Badge>
                             </div>
                           </div>
-                          <Link href={`/issues/${issue.slug}`}>
-                            <Button variant="ghost" size="icon" className="rounded-full shrink-0 border border-slate-900/10 dark:border-white/10">
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </Link>
+                          {issue.status === "pending_review" ? (
+                            <span className="text-xs text-slate-500">Awaiting review</span>
+                          ) : (
+                            <Link href={`/issues/${issue.slug}`}>
+                              <Button variant="ghost" size="icon" className="rounded-full shrink-0 border border-slate-900/10 dark:border-white/10">
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                          )}
                         </div>
                       ))
                     ) : (

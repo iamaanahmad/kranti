@@ -2,15 +2,16 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { appwriteCommentsCollectionId, appwriteDatabaseId, appwriteIssuesCollectionId, createDocument, listDocuments } from "@/lib/appwrite";
+import { isPublicIssue } from "@/lib/issue-visibility";
 
 export const runtime = "nodejs";
 
 export async function GET(_: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const issueQuery = await listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [`equal("slug", ["${slug}"])`, "limit(1)"]);
-  const issue = (issueQuery as { documents?: Array<{ $id: string }> }).documents?.[0];
+  const issue = (issueQuery as { documents?: Array<{ $id: string; status?: string; visibility?: string }> }).documents?.[0];
 
-  if (!issue) {
+  if (!issue || !isPublicIssue(issue)) {
     return NextResponse.json({ ok: true, comments: [] });
   }
 
@@ -49,9 +50,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   }
 
   const issueQuery = await listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [`equal("slug", ["${slug}"])`, "limit(1)"]);
-  const issue = (issueQuery as { documents?: Array<{ $id: string }> }).documents?.[0];
+  const issue = (issueQuery as { documents?: Array<{ $id: string; status?: string; visibility?: string }> }).documents?.[0];
 
-  if (!issue) {
+  if (!issue || !isPublicIssue(issue)) {
     return NextResponse.json({ error: "Issue not found" }, { status: 404 });
   }
 

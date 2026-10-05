@@ -15,9 +15,12 @@ import {
   listDocuments,
   upsertDocument,
   uploadFileBuffer,
+  getDocument,
+  Query,
 } from "@/lib/appwrite";
 import { buildIssueSlug, issueSubmissionSchema } from "@/lib/issue-form";
 import { detectEvidenceType } from "@/lib/evidence";
+import { isPublicIssue } from "@/lib/issue-visibility";
 
 export const runtime = "nodejs";
 
@@ -126,7 +129,7 @@ export async function POST(request: Request) {
       risk_score: submission.evidenceLevel === "high" ? 20 : submission.evidenceLevel === "medium" ? 40 : 60,
       evidence_count: uploadedEvidence.length,
       featured: false,
-      visibility: "public",
+      visibility: "private",
     });
 
     for (const evidenceItem of uploadedEvidence) {
@@ -171,11 +174,35 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+async function isModerator(userId: string): Promise<boolean> {
   try {
+    let user: Record<string, unknown> | undefined;
+    try {
+      user = await getDocument(appwriteDatabaseId, appwriteUsersCollectionId, userId) as Record<string, unknown>;
+    } catch {
+      const result = await listDocuments(appwriteDatabaseId, appwriteUsersCollectionId, [
+        Query.equal("clerk_id", [userId]),
+        Query.limit(1),
+      ]) as { documents?: Array<Record<string, unknown>> };
+      user = result.documents?.[0];
+    }
+    return user?.role === "admin" || user?.role === "moderator";
+  } catch {
+    return false;
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const includePrivate = new URL(request.url).searchParams.get("includePrivate") === "1";
+    if (includePrivate) {
+      const { userId } = await auth();
+      if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (!await isModerator(userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const [issuesResponse, evidenceResponse, usersResponse] = await Promise.all([
       listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, []),
-      listDocuments(appwriteDatabaseId, appwriteEvidenceCollectionId, []),
+      includePrivate ? listDocuments(appwriteDatabaseId, appwriteEvidenceCollectionId, []) : Promise.resolve({ documents: [] }),
       listDocuments(appwriteDatabaseId, appwriteUsersCollectionId, []),
     ]);
 
@@ -198,7 +225,8 @@ export async function GET() {
       return accumulator;
     }, {});
 
-    const issues = ((issuesResponse as { documents?: Array<Record<string, unknown>> }).documents ?? []).map((document) => {
+    const documents = (issuesResponse as { documents?: Array<Record<string, unknown>> }).documents ?? [];
+    const issues = documents.filter((document) => includePrivate || isPublicIssue(document)).map((document) => {
       const createdBy = String(document.created_by ?? document.createdBy ?? "");
       const creator = users[createdBy];
       const issueEvidence = evidenceByIssue[String(document.$id ?? "")] ?? [];
@@ -211,9 +239,9 @@ export async function GET() {
         category: document.category,
         state: document.state,
         district: document.district,
-        status: document.status,
+        status: document.visibility === "private" && document.status === "open" ? "pending_review" : document.status,
         supporter_count: Number(document.supporter_count ?? document.supportCount ?? 0),
-        evidence_count: Number(document.evidence_count ?? document.evidenceCount ?? issueEvidence.length),
+        evidence_count: includePrivate ? Number(document.evidence_count ?? document.evidenceCount ?? issueEvidence.length) : 0,
         created_by: createdBy,
         creatorName: String(creator?.display_name ?? creator?.full_name ?? creator?.username ?? "Citizen Reporter"),
         creatorAvatar: String(creator?.avatar_url ?? creator?.imageUrl ?? ""),

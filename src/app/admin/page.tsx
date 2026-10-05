@@ -47,7 +47,7 @@ export default function AdminPage() {
   const [issues, setIssues] = useState<IssueRecord[]>([]);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "escalated" | "in_progress" | "resolved">("open");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending_review" | "open" | "escalated" | "in_progress" | "resolved">("pending_review");
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [moderationLogs, setModerationLogs] = useState<AdminLog[]>([]);
@@ -116,12 +116,12 @@ export default function AdminPage() {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch("/api/issues", { signal: controller.signal })
+    fetch("/api/issues?includePrivate=1", { signal: controller.signal })
       .then((response) => response.json())
       .then((data) => {
         const nextIssues = Array.isArray(data?.issues) ? data.issues : [];
         setIssues(nextIssues);
-        setSelectedIssueId((current) => current || nextIssues.find((issue: IssueRecord) => issue.status === "open")?.$id || nextIssues[0]?.$id || null);
+        setSelectedIssueId((current) => current || nextIssues.find((issue: IssueRecord) => issue.status === "pending_review")?.$id || nextIssues[0]?.$id || null);
       })
       .catch(() => {
         setIssues([]);
@@ -317,6 +317,7 @@ export default function AdminPage() {
               {/* Status filtering tabs */}
               <div className="flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl">
                 {[
+                  { id: "pending_review", label: "Review" },
                   { id: "open", label: "Open" },
                   { id: "escalated", label: "Escalated" },
                   { id: "resolved", label: "Resolved" },

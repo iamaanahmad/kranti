@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
 import { siteGuides } from "@/lib/site-content";
+import { isPublicIssue } from "@/lib/issue-visibility";
 import {
   appwriteDatabaseId,
   appwriteIssuesCollectionId,
@@ -17,6 +18,7 @@ interface DocWithSlug {
   $id: string;
   $updatedAt?: string;
   status?: string;
+  visibility?: string;
 }
 
 // Statuses whose detail pages are public and indexable. The sitemap must stay
@@ -29,7 +31,8 @@ const PUBLIC_CAMPAIGN_STATUSES = ["active", "completed"];
 
 async function fetchPublicSlugs(
   collectionId: string,
-  publicStatuses: string[]
+  publicStatuses: string[],
+  requirePublicVisibility = false
 ): Promise<Array<{ slug: string; lastModified: string }>> {
   try {
     const res = (await listDocuments(appwriteDatabaseId, collectionId, [
@@ -37,7 +40,7 @@ async function fetchPublicSlugs(
     ])) as { documents?: DocWithSlug[] };
 
     return (res.documents || [])
-      .filter((d) => d.slug && d.status && publicStatuses.includes(d.status))
+      .filter((d) => d.slug && d.status && publicStatuses.includes(d.status) && (!requirePublicVisibility || isPublicIssue({ status: d.status, visibility: d.visibility })))
       .map((d) => ({
         slug: d.slug as string,
         lastModified: d.$updatedAt || new Date().toISOString(),
@@ -79,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // ── Dynamic user content (fetched from Appwrite) ──────────────────────────
   const [issues, petitions, campaigns] = await Promise.all([
-    fetchPublicSlugs(appwriteIssuesCollectionId, PUBLIC_ISSUE_STATUSES),
+    fetchPublicSlugs(appwriteIssuesCollectionId, PUBLIC_ISSUE_STATUSES, true),
     fetchPublicSlugs(appwritePetitionsCollectionId, PUBLIC_PETITION_STATUSES),
     fetchPublicSlugs(appwriteCampaignsCollectionId, PUBLIC_CAMPAIGN_STATUSES),
   ]);

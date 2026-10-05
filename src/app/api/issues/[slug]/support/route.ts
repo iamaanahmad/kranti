@@ -14,6 +14,7 @@ import {
 } from "@/lib/appwrite";
 import { notifyNewSupport } from "@/lib/notifications";
 import { belongsToSupporter, legacySupportDocumentId, supportDocumentId } from "@/lib/support-id";
+import { isPublicIssue } from "@/lib/issue-visibility";
 
 export const runtime = "nodejs";
 
@@ -28,9 +29,9 @@ export async function POST(_: Request, { params }: { params: Promise<{ slug: str
   const { slug } = await params;
 
   const issueQuery = await listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [Query.equal("slug", [slug]), Query.limit(1)]);
-  const issue = (issueQuery as { documents?: Array<{ $id: string; supporter_count?: number; title?: string; created_by?: string }> }).documents?.[0];
+  const issue = (issueQuery as { documents?: Array<{ $id: string; supporter_count?: number; title?: string; created_by?: string; status?: string; visibility?: string }> }).documents?.[0];
 
-  if (!issue) {
+  if (!issue || !isPublicIssue(issue)) {
     return NextResponse.json({ error: "Issue not found" }, { status: 404 });
   }
 

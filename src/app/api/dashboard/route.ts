@@ -49,7 +49,7 @@ export async function GET() {
       category: String(document.category ?? "general"),
       state: String(document.state ?? ""),
       district: String(document.district ?? ""),
-      status: String(document.status ?? "pending_review"),
+      status: document.visibility === "private" && document.status === "open" ? "pending_review" : String(document.status ?? "pending_review"),
       supporter_count: Number(document.supporter_count ?? document.supportCount ?? 0),
       evidence_count: Number(document.evidence_count ?? document.evidenceCount ?? 0),
       created_by: String(document.created_by ?? document.createdBy ?? ""),
