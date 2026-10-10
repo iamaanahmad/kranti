@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { ID } from "node-appwrite";
 
 import {
@@ -33,11 +33,6 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = parsed.data;
 
-    const client = await clerkClient();
-    const user = await client.users.getUser(userId);
-    const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || "Anonymous";
-    const userAvatar = user.imageUrl;
-
     const campaignId = ID.unique();
     const slug = buildCampaignSlug(validatedData.title, campaignId);
 
@@ -52,8 +47,6 @@ export async function POST(request: NextRequest) {
       volunteer_count: 0,
       featured: false,
       created_by: userId,
-      creator_name: userName,
-      creator_avatar: userAvatar || "",
       language: validatedData.language,
       start_date: validatedData.startDate || null,
       end_date: validatedData.endDate || null,
@@ -119,8 +112,8 @@ export async function GET(request: NextRequest) {
       volunteer_count: doc.volunteer_count,
       featured: doc.featured,
       created_by: doc.created_by,
-      creatorName: doc.creator_name,
-      creatorAvatar: doc.creator_avatar,
+      creatorName: String(doc.creator_name ?? "Citizen"),
+      creatorAvatar: String(doc.creator_avatar ?? ""),
       language: doc.language,
       start_date: doc.start_date,
       end_date: doc.end_date,
