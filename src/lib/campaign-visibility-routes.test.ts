@@ -21,7 +21,7 @@ test("public campaign routes hide submissions awaiting review", async () => {
     assert.equal(calls.length, 0);
 
     const listing = await list(new NextRequest("http://localhost/api/campaigns"));
-    assert.deepEqual(await listing.json(), { campaigns: [] });
+    assert.deepEqual(await listing.json(), { campaigns: [], hasMore: false });
     assert.equal(calls.length, 1);
 
     const single = await detail(new NextRequest("http://localhost/api/campaigns/test-campaign"), {
