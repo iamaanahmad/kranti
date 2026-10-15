@@ -159,7 +159,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Failed to mark notifications as read:", error);
       setMarkReadError(true);
-      void fetchNotifications().then(setNotifications).catch(() => setNotificationsError(true));
+      retryNotifications();
     }
   };
 
@@ -174,7 +174,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
       setMarkReadError(true);
-      void fetchNotifications().then(setNotifications).catch(() => setNotificationsError(true));
+      retryNotifications();
     }
   };
 
