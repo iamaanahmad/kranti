@@ -11,6 +11,7 @@ test("campaign creation writes only fields accepted by the live collection", asy
     exports: {
       auth: async () => ({ userId: "synthetic_owner" }),
       clerkClient: async () => ({ users: { getUser: async () => ({
+        id: "synthetic_owner",
         firstName: "Test", lastName: "Citizen", username: "synthetic", imageUrl: "",
       }) } }),
     },
