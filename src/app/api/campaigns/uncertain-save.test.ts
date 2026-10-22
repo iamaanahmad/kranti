@@ -11,6 +11,7 @@ test("campaign creation gives check-before-retry guidance when the save result i
     exports: {
       auth: async () => ({ userId: "synthetic_owner" }),
       clerkClient: async () => ({ users: { getUser: async () => ({
+        id: "synthetic_owner",
         firstName: "Test", lastName: "Citizen", username: "synthetic", imageUrl: "",
       }) } }),
     },
