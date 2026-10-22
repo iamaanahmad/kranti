@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@clerk/nextjs";
 import { motion } from "framer-motion";
-import { Loader2, Users, Calendar, Target, ArrowRight } from "lucide-react";
+import { Loader2, Users, Calendar, Target, ArrowRight, CheckCircle2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export default function NewCampaignPage() {
   const { userId, isSignedIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [savedCampaignId, setSavedCampaignId] = useState<string | null>(null);
 
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignFormSchema),
@@ -61,7 +62,7 @@ export default function NewCampaignPage() {
 
       const result = await response.json();
       clearDraft();
-      router.push(`/campaigns/${result.slug}`);
+      setSavedCampaignId(result.campaignId);
     } catch (error) {
       console.error("Campaign creation error:", error);
       setSubmitError(error instanceof Error ? error.message : "Failed to create campaign");
@@ -80,6 +81,28 @@ export default function NewCampaignPage() {
           </CardHeader>
         </Card>
       </div>
+    );
+  }
+
+  if (savedCampaignId) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f4f1ea] px-6 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
+        <Card className="w-full max-w-lg border-slate-900/10 bg-white/90 shadow-lg dark:border-white/10 dark:bg-slate-900">
+          <CardHeader className="space-y-4">
+            <CheckCircle2 aria-hidden="true" className="h-10 w-10 text-emerald-700 dark:text-emerald-400" />
+            <CardTitle className="text-2xl">Campaign saved</CardTitle>
+            <CardDescription className="text-base leading-7">
+              Your campaign is awaiting review. It will not appear on public campaign pages until it is approved.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <p className="text-sm text-slate-600 dark:text-slate-300">Reference: <span className="font-mono text-slate-900 dark:text-slate-100">{savedCampaignId}</span></p>
+            <Button onClick={() => router.push("/")} className="min-h-11 w-full rounded-full bg-slate-950 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200">
+              Return home
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
     );
   }
 
