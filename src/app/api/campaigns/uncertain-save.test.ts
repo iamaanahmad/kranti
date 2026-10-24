@@ -11,6 +11,7 @@ test("campaign creation gives check-before-retry guidance when the save result i
     exports: {
       auth: async () => ({ userId: "synthetic_owner" }),
       clerkClient: async () => ({ users: { getUser: async () => ({
+        id: "synthetic_owner",
         firstName: "Test", lastName: "Citizen", username: "synthetic", imageUrl: "",
       }) } }),
     },
@@ -39,7 +40,8 @@ test("campaign creation gives check-before-retry guidance when the save result i
     assert.equal(writes, 1);
     assert.equal(response.status, 503);
     const body = await response.json();
-    assert.match(body.error, /check your dashboard before trying again/i);
+    assert.match(body.error, /keep your draft and contact kranti before submitting again/i);
+    assert.doesNotMatch(body.error, /dashboard/i);
     assert.doesNotMatch(body.error, /private storage detail/i);
   } finally {
     if (originalClerk) require.cache[clerkPath] = originalClerk;

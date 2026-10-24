@@ -53,8 +53,6 @@ export async function POST(request: NextRequest) {
     if (user.id !== userId) {
       return NextResponse.json({ error: "Unable to load your account. Please try again." }, { status: 503 });
     }
-    const userName = user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.username || "Anonymous";
-    const userAvatar = user.imageUrl;
 
     const campaignId = ID.unique();
     const slug = buildCampaignSlug(validatedData.title, campaignId);
@@ -70,8 +68,6 @@ export async function POST(request: NextRequest) {
       volunteer_count: 0,
       featured: false,
       created_by: userId,
-      creator_name: userName,
-      creator_avatar: userAvatar || "",
       language: validatedData.language,
       start_date: validatedData.startDate || null,
       end_date: validatedData.endDate || null,
@@ -89,7 +85,7 @@ export async function POST(request: NextRequest) {
     console.error("Campaign creation error:", error instanceof AppwriteRequestError ? `Appwrite status ${error.status}` : "Unexpected error");
 
     return NextResponse.json(
-      { error: "We couldn't confirm your campaign was saved. Check your dashboard before trying again." },
+      { error: "We couldn't confirm your campaign was saved. Keep your draft and contact Kranti before submitting again." },
       { status: 503 },
     );
   }
@@ -149,8 +145,8 @@ export async function GET(request: NextRequest) {
       status: doc.status,
       volunteer_count: doc.volunteer_count,
       featured: doc.featured,
-      creatorName: doc.creator_name,
-      creatorAvatar: doc.creator_avatar,
+      creatorName: String(doc.creator_name ?? "Citizen"),
+      creatorAvatar: String(doc.creator_avatar ?? ""),
       language: doc.language,
       start_date: doc.start_date,
       end_date: doc.end_date,
