@@ -78,6 +78,11 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Petition details may include review-pending content for their creator.
+        source: "/petitions/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
+      },
     ];
   },
 };

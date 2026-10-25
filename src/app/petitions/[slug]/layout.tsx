@@ -9,6 +9,8 @@ import {
 import { canonical, SITE_URL, buildBreadcrumbSchema } from "@/lib/seo";
 import { isPublicPetitionStatus } from "@/lib/public-petition-status";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: Promise<{ slug: string }>;
   children: React.ReactNode;
