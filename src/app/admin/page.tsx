@@ -363,6 +363,9 @@ export default function AdminPage() {
             <p className="max-w-2xl text-slate-600 dark:text-slate-350">
               Audit public issues, verify photographic and video evidence coordinates, filter spam/doxxing violations, and escalate verified reports.
             </p>
+            <Link href="/admin/petitions" className="inline-block text-sm font-semibold text-slate-800 underline underline-offset-4 dark:text-slate-200">
+              Review petitions
+            </Link>
           </div>
         </div>
 

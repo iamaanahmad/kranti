@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import {
@@ -13,6 +13,8 @@ import {
 } from "@/lib/appwrite";
 import { isPublicPetitionStatus } from "@/lib/public-petition-status";
 import { publicEvidenceWebUrl } from "@/lib/evidence";
+import { getUserRole } from "@/lib/role-lookup";
+import { verifiedPrimaryEmailForAccount } from "@/lib/account-sync";
 
 export const runtime = "nodejs";
 
@@ -36,8 +38,28 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 
     const petitionDoc = ((petitionsResponse as { documents?: Array<Record<string, unknown>> }).documents ?? [])[0];
 
-    if (!petitionDoc || !isPublicPetitionStatus(petitionDoc.status)) {
+    if (!petitionDoc) {
       return NextResponse.json({ error: "Petition not found" }, { status: 404 });
+    }
+
+    if (!isPublicPetitionStatus(petitionDoc.status)) {
+      const ownerId = petitionDoc.created_by ?? petitionDoc.createdBy;
+      if (!userId || userId !== ownerId) {
+        let reviewer = false;
+        if (userId) {
+          try {
+            const role = await getUserRole(userId, null, undefined, async () => {
+              const user = await currentUser();
+              if (!user) throw new Error("Clerk user unavailable");
+              return verifiedPrimaryEmailForAccount(user, userId);
+            });
+            reviewer = role === "admin" || role === "moderator";
+          } catch {
+            // A failed role lookup must not expose a private petition.
+          }
+        }
+        if (!reviewer) return NextResponse.json({ error: "Petition not found" }, { status: 404 });
+      }
     }
 
     const createdBy = String(petitionDoc.created_by ?? petitionDoc.createdBy ?? "");
