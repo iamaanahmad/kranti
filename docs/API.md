@@ -34,6 +34,7 @@ The admin page gate also checks linked roles before asking Clerk for a verified 
 
 Issue creation accepts no evidence or a list of valid evidence metadata. Malformed evidence metadata returns HTTP 400 before file or issue writes.
 Issue creation never updates an existing issue if a generated document ID conflicts with one already stored.
+Account sync checks a fresh record after a create conflict. It updates only when that record explicitly links to the signed-in Clerk account, and preserves its saved role, trust score, and consent choice.
 Issue creation stores the required nearby landmark in its optional `landmark` field. Landmarks over 255 characters fail validation before a write.
 Issue creation rejects JSON request bodies over 1 MiB with HTTP 413 before any Appwrite write.
 Issue creation returns safe HTTP 503 when a save result cannot be confirmed. The citizen must check the dashboard before retrying.
@@ -68,7 +69,7 @@ Campaign creation rejects JSON request bodies over 1 MiB with HTTP 413 before ca
 Campaign creation returns safe HTTP 503 JSON before any Appwrite write when Clerk cannot load the signed-in account.
 Campaign creation gives account retry guidance if Clerk authentication fails before any Appwrite request. Unsigned access remains HTTP 401.
 Campaign creation also stops before storage if the loaded Clerk profile ID differs from the signed-in ID.
-Campaign creation returns safe HTTP 503 JSON when its save result cannot be confirmed. Check the dashboard before trying again.
+Campaign creation returns safe HTTP 503 JSON when its save result cannot be confirmed. The dashboard does not list campaigns, so keep the draft and contact Kranti before trying again.
 
 Public lists require bounded pagination. Never expose an unbounded collection query.
 
