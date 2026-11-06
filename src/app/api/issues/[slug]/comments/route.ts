@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { ID } from "node-appwrite";
 
@@ -106,26 +106,13 @@ async function saveComment(request: Request, { params }: { params: Promise<{ slu
     return NextResponse.json({ error: "Issue not found" }, { status: 404 });
   }
 
-  let user: Awaited<ReturnType<typeof currentUser>> = null;
-  try {
-    user = await currentUser();
-  } catch {
-    // The authenticated user ID owns the comment. A display name is optional.
-    console.warn("Issue commenter display name unavailable");
-  }
-  // The optional profile must not attribute this account's comment to another user.
-  if (user?.id !== userId) user = null;
-
   const commentId = `comment-${ID.unique()}`;
   const document = await createDocument(appwriteDatabaseId, appwriteCommentsCollectionId, commentId, {
     issue_id: issue.$id,
     user_id: userId,
-    user_name: [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "Citizen",
-    avatar_url: user?.imageUrl ?? null,
     content,
     status: "approved",
     language: details.language ?? "en",
-    created_at: new Date().toISOString(),
   });
 
   return NextResponse.json({

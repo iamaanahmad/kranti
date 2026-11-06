@@ -1,22 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-test("comment replies keep private fields out and survive a Clerk profile outage", async () => {
+test("comment saves only live collection fields and keeps private fields out", async () => {
   const originalFetch = globalThis.fetch;
   const originalKey = process.env.APPWRITE_API_KEY;
   const clerkPath = require.resolve("@clerk/nextjs/server");
   const originalClerk = require.cache[clerkPath];
-  const originalWarn = console.warn;
-  let profileUnavailable = false;
-  let profileId = "synthetic_owner";
   process.env.APPWRITE_API_KEY = "synthetic-test-key";
   require.cache[clerkPath] = {
     exports: {
       auth: async () => ({ userId: "synthetic_owner" }),
-      currentUser: async () => {
-        if (profileUnavailable) throw new Error("synthetic profile outage");
-        return { id: profileId, firstName: "Test", lastName: "Citizen", imageUrl: "https://example.test/avatar.png" };
-      },
     },
   } as NodeModule;
 
@@ -28,11 +21,10 @@ test("comment replies keep private fields out and survive a Clerk profile outage
           $id: "synthetic_comment",
           issue_id: "synthetic_issue",
           user_id: "synthetic_owner",
-          user_name: (saved = (JSON.parse(String(init.body)) as { data: Record<string, unknown> }).data).user_name,
-          avatar_url: null,
+          ...(saved = (JSON.parse(String(init.body)) as { data: Record<string, unknown> }).data),
           content: "Synthetic comment",
           status: "approved",
-          created_at: "2026-10-16T00:00:00.000Z",
+          $createdAt: "2026-10-16T00:00:00.000Z",
           private_note: "do not return",
         })
       : Response.json({ documents: [{ $id: "synthetic_issue", status: "open" }] });
@@ -49,37 +41,13 @@ test("comment replies keep private fields out and survive a Clerk profile outage
     assert.equal(body.comment.$id, "synthetic_comment");
     assert.equal(body.comment.createdAt, "2026-10-16T00:00:00.000Z");
     assert.equal(body.comment.avatar_url, "");
-    assert.equal(body.comment.user_name, "Test Citizen");
-
-    profileId = "synthetic_other_account";
-    const mismatchResponse = await POST(new Request("https://example.test/api/issues/test/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "Mismatched synthetic profile" }),
-    }), { params: Promise.resolve({ slug: "test" }) });
-    assert.equal(mismatchResponse.status, 200);
+    assert.equal(body.comment.user_name, "Citizen");
+    assert.deepEqual(Object.keys(saved).sort(), ["content", "issue_id", "language", "status", "user_id"]);
     assert.equal(saved.user_id, "synthetic_owner");
-    assert.equal(saved.user_name, "Citizen");
-    assert.equal(saved.avatar_url, null);
-    assert.equal((await mismatchResponse.json()).comment.user_name, "Citizen");
-
-    profileUnavailable = true;
-    console.warn = () => {};
-    const fallbackResponse = await POST(new Request("https://example.test/api/issues/test/comments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "Another synthetic comment" }),
-    }), { params: Promise.resolve({ slug: "test" }) });
-    assert.equal(fallbackResponse.status, 200);
-    assert.equal(saved.user_id, "synthetic_owner");
-    assert.equal(saved.user_name, "Citizen");
-    assert.equal(saved.avatar_url, null);
-    assert.equal((await fallbackResponse.json()).comment.user_name, "Citizen");
   } finally {
     if (originalClerk) require.cache[clerkPath] = originalClerk;
     else delete require.cache[clerkPath];
     globalThis.fetch = originalFetch;
-    console.warn = originalWarn;
     if (originalKey === undefined) delete process.env.APPWRITE_API_KEY;
     else process.env.APPWRITE_API_KEY = originalKey;
   }
