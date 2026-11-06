@@ -152,7 +152,7 @@ async function createPetition(request: Request) {
     state: submission.state,
     district: submission.district || "",
     language: submission.language,
-    status: "open",
+    status: "pending_review",
     signature_count: 0,
     signature_goal: submission.signatureGoal,
     evidence_count: uploadedEvidence.length + evidenceLinks.length,
