@@ -15,6 +15,7 @@ test("public issue replies hide creator IDs while moderators retain them", async
   let failEvidenceLookup = false;
   let failIssueLookup = false;
   let conflictingCreatorLink = false;
+  let issueStatus = "open";
   let issueQuery = "";
   process.env.APPWRITE_API_KEY = "synthetic-test-key";
   require.cache[clerkPath] = { exports: { auth: async () => ({ userId: viewerId }), currentUser: async () => null } } as NodeModule;
@@ -38,7 +39,7 @@ test("public issue replies hide creator IDs while moderators retain them", async
         return Response.json({ message: "Synthetic evidence outage" }, { status: 503 });
       }
       const documents = collection === "issues"
-        ? [{ $id: "synthetic-issue", slug: "synthetic", title: "Synthetic issue", created_by: "private-clerk-id", private_note: "private", evidence_count: 2 }]
+        ? [{ $id: "synthetic-issue", slug: "synthetic", title: "Synthetic issue", description: "synthetic citizen text", status: issueStatus, created_by: "private-clerk-id", private_note: "private", evidence_count: 2 }]
         : collection === "users"
           ? [{ $id: "private-clerk-id", clerk_id: conflictingCreatorLink ? "different-clerk-id" : "private-clerk-id", display_name: "Citizen", avatar_url: "https://example.test/citizen.png" }]
           : collection === "evidence"
@@ -58,6 +59,15 @@ test("public issue replies hide creator IDs while moderators retain them", async
     assert.equal(publicIssue.evidence[0].name, "Evidence");
     assert.equal(publicIssue.evidence[0].publicUrl, "");
     assert.doesNotMatch(JSON.stringify(publicIssue), /private-person-name/);
+
+    issueStatus = "pending_review";
+    const unreviewedResponse = await GET(new Request("https://example.test/api/issues"));
+    assert.equal(unreviewedResponse.status, 200);
+    assert.deepEqual((await unreviewedResponse.json()).issues, []);
+    issueStatus = "rejected";
+    const rejectedResponse = await GET(new Request("https://example.test/api/issues"));
+    assert.deepEqual((await rejectedResponse.json()).issues, []);
+    issueStatus = "open";
 
     conflictingCreatorLink = true;
     const mismatchedResponse = await GET(new Request("https://example.test/api/issues"));
@@ -83,6 +93,11 @@ test("public issue replies hide creator IDs while moderators retain them", async
     assert.equal(pendingResponse.status, 200);
     assert.match(issueQuery, /pending_review/);
     assert.doesNotMatch(issueQuery, /open|escalated|resolved/);
+
+    issueStatus = "rejected";
+    const rejectedReviewResponse = await GET(new Request("https://example.test/api/issues?review=1"));
+    assert.deepEqual((await rejectedReviewResponse.json()).issues, []);
+    issueStatus = "open";
 
     viewerRole = "citizen";
     issueQuery = "";
