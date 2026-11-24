@@ -17,6 +17,7 @@ test("public issue replies hide creator IDs while moderators retain them", async
   let conflictingCreatorLink = false;
   let issueStatus = "open";
   let issueQuery = "";
+  let linkedReads = 0;
   process.env.APPWRITE_API_KEY = "synthetic-test-key";
   require.cache[clerkPath] = { exports: { auth: async () => ({ userId: viewerId }), currentUser: async () => null } } as NodeModule;
   require.cache[rolePath] = { exports: { getUserRole: async () => {
@@ -29,6 +30,7 @@ test("public issue replies hide creator IDs while moderators retain them", async
     globalThis.fetch = async (input) => {
       const collection = new URL(String(input)).pathname.split("/collections/")[1]?.split("/")[0];
       if (collection === "issues") issueQuery = decodeURIComponent(String(input));
+      if (collection === "users" || collection === "evidence") linkedReads += 1;
       if (collection === "issues" && failIssueLookup) {
         return Response.json({ message: "Synthetic issue outage" }, { status: 503 });
       }
@@ -61,12 +63,19 @@ test("public issue replies hide creator IDs while moderators retain them", async
     assert.doesNotMatch(JSON.stringify(publicIssue), /private-person-name/);
 
     issueStatus = "pending_review";
+    const linkedReadsBeforeDenied = linkedReads;
     const unreviewedResponse = await GET(new Request("https://example.test/api/issues"));
     assert.equal(unreviewedResponse.status, 200);
-    assert.deepEqual((await unreviewedResponse.json()).issues, []);
+    const unreviewedBody = await unreviewedResponse.json();
+    assert.deepEqual(unreviewedBody.issues, []);
+    assert.doesNotMatch(JSON.stringify(unreviewedBody), /synthetic citizen text|private-clerk-id/);
+    assert.equal(linkedReads, linkedReadsBeforeDenied);
     issueStatus = "rejected";
     const rejectedResponse = await GET(new Request("https://example.test/api/issues"));
-    assert.deepEqual((await rejectedResponse.json()).issues, []);
+    const rejectedBody = await rejectedResponse.json();
+    assert.deepEqual(rejectedBody.issues, []);
+    assert.doesNotMatch(JSON.stringify(rejectedBody), /synthetic citizen text|private-clerk-id/);
+    assert.equal(linkedReads, linkedReadsBeforeDenied);
     issueStatus = "open";
 
     conflictingCreatorLink = true;
