@@ -34,7 +34,7 @@ The most common reason RTIs are rejected is filing with the wrong department. Be
 
 1. Identify which government body is responsible for the issue (e.g., Municipal Corporation for roads, Water Board for water supply, PWD for state highways).
 2. Find the name of the Public Information Officer (PIO) of that department. Most departments publish this on their website.
-3. Check the public authority before filing. The Central RTI Online portal does not accept requests for State public authorities, including Delhi. Find the relevant State authority's RTI route before you pay.
+3. Check the public authority before filing. The Central RTI Online portal does not accept requests for State public authorities, including Delhi. Find the relevant State authority's RTI route before you pay. If you file with the wrong public authority, it must transfer your application to the correct one within 5 days.
 
 ### Step 2 — Draft Your Questions
 
