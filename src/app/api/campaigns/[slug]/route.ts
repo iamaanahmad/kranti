@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listDocuments, appwriteDatabaseId, appwriteCampaignsCollectionId } from "@/lib/appwrite";
+import { AppwriteRequestError, listDocuments, appwriteDatabaseId, appwriteCampaignsCollectionId, Query } from "@/lib/appwrite";
 
 export async function GET(
   request: NextRequest,
@@ -9,8 +9,8 @@ export async function GET(
     const { slug } = await context.params;
 
     const response = await listDocuments(appwriteDatabaseId, appwriteCampaignsCollectionId, [
-      `equal("slug", ["${slug}"])`,
-      `limit(1)`,
+      Query.equal("slug", [slug]),
+      Query.limit(1),
     ]);
 
     if (!(response as { documents?: Array<Record<string, unknown>> }).documents || ((response as { documents?: Array<Record<string, unknown>> }).documents ?? []).length === 0) {
@@ -30,7 +30,6 @@ export async function GET(
       status: doc.status,
       volunteer_count: doc.volunteer_count,
       featured: doc.featured,
-      created_by: doc.created_by,
       creatorName: doc.creator_name,
       creatorAvatar: doc.creator_avatar,
       language: doc.language,
@@ -41,7 +40,7 @@ export async function GET(
 
     return NextResponse.json({ campaign });
   } catch (error) {
-    console.error("Campaign fetch error:", error);
-    return NextResponse.json({ error: "Failed to fetch campaign" }, { status: 500 });
+    console.error("Campaign fetch error:", error instanceof AppwriteRequestError ? `Appwrite status ${error.status}` : "Unexpected error");
+    return NextResponse.json({ error: "Campaign could not load. Please try again." }, { status: 503 });
   }
 }
