@@ -4,7 +4,9 @@ import {
   appwriteDatabaseId,
   appwriteIssuesCollectionId,
   listDocuments,
+  Query,
 } from "@/lib/appwrite";
+import { publicIssueStatuses } from "@/lib/public-issue-status";
 
 export const runtime = "nodejs";
 
@@ -19,11 +21,15 @@ export const runtime = "nodejs";
  */
 export async function GET() {
   try {
+    // Count only published issues, so unreviewed or rejected reports stay out of public figures.
     const [allIssues, resolvedIssues] = await Promise.all([
-      listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, ["limit(1)"]),
       listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [
-        'equal("status", ["resolved"])',
-        "limit(1)",
+        Query.equal("status", [...publicIssueStatuses]),
+        Query.limit(1),
+      ]),
+      listDocuments(appwriteDatabaseId, appwriteIssuesCollectionId, [
+        Query.equal("status", ["resolved"]),
+        Query.limit(1),
       ]),
     ]);
 
