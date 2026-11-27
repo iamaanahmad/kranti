@@ -149,6 +149,9 @@ export default function PetitionDetailPage() {
         return { color: "text-amber-700 bg-amber-50 border-amber-200", label: "In Progress", icon: Clock };
       case "pending_review":
         return { color: "text-slate-600 bg-slate-50 border-slate-200", label: "Under Review", icon: AlertCircle };
+      case "rejected":
+      case "withdrawn":
+        return { color: "text-slate-600 bg-slate-50 border-slate-200", label: "Not Published", icon: AlertCircle };
       default:
         return { color: "text-rose-700 bg-rose-50 border-rose-200", label: "Open for Signatures", icon: TrendingUp };
     }
@@ -223,7 +226,9 @@ export default function PetitionDetailPage() {
           <CardContent className="pt-6">
             {!canSignPetition(petition.status) ? (
               <p role="status" className="rounded-2xl border border-slate-900/10 bg-slate-50 p-4 text-center text-sm text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
-                This petition is not open for signatures.
+                {petition.status === "pending_review"
+                  ? "Your petition is under review. Only you and reviewers can open this page until approval."
+                  : "This petition is not open for signatures."}
               </p>
             ) : isLoaded && user ? (
               hasSigned ? (
@@ -343,7 +348,7 @@ export default function PetitionDetailPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-slate-900/10 bg-white/90 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
+            {canSignPetition(petition.status) && <Card className="border-slate-900/10 bg-white/90 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Share2 className="h-4 w-4" />
@@ -357,7 +362,7 @@ export default function PetitionDetailPage() {
                   description={`Sign this petition: ${petition.title}`}
                 />
               </CardContent>
-            </Card>
+            </Card>}
 
             <Card className="border-slate-900/10 bg-white/90 shadow-sm dark:border-white/10 dark:bg-slate-900/70">
               <CardHeader>
